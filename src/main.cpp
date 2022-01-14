@@ -12,6 +12,7 @@
 const double liftkP = 0.001;
 const double liftkI = 0.0001;
 const double liftkD = 0.0001;
+const double p = 2 * acos(0.0);
 
 MotorGroup left({1, 11});
 MotorGroup right({-19, 20});
@@ -72,6 +73,12 @@ std::shared_ptr<AsyncPositionController<double, double>> liftcontroller =
 //        .withGains({liftkP, liftkI, liftkD})
         .build();
 
+std::shared_ptr<AsyncPositionController<double, double>> tipcontroller =
+        AsyncPosControllerBuilder()
+                .withMotor(15) // lift motor port 3
+//        .withGains({liftkP, liftkI, liftkD})
+                .build();
+
 void on_center_button() {
 	static bool pressed = false;
 	pressed = !pressed;
@@ -91,25 +98,21 @@ void on_center_button() {
 
 void initialize() {
 	pros::lcd::initialize();
-    arm.setBrakeMode(AbstractMotor::brakeMode::hold);
-    jaw.setBrakeMode(AbstractMotor::brakeMode::hold);
-    tip.setBrakeMode(AbstractMotor::brakeMode::hold);
-    arm.setGearing(AbstractMotor::gearset::red);
-    jaw.setGearing(AbstractMotor::gearset::red);
+//    arm.setBrakeMode(AbstractMotor::brakeMode::hold);
+//    jaw.setBrakeMode(AbstractMotor::brakeMode::hold);
+//    tip.setBrakeMode(AbstractMotor::brakeMode::hold);
+//    arm.setGearing(AbstractMotor::gearset::red);
+////    jaw.setGearing(AbstractMotor::gearset::red);
+//    tip.setGearing(AbstractMotor::gearset::red);
+    DLF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    DLB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    DRB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    DRF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    claw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    Fork.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     autonomous();
 
-//    lv_obj_align(myLabel, NULL, LV_ALIGN_LEFT_MID, 10, 0); //set the position to center
-//    autonomous();
-
-//	DLF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-//	DLB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-//	DRF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-//	DRB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-/////    pros::Imu imu_sensor(6);
-//    imu_sensor.reset();
-//	autonomous();
-	// opcontrol();
-	// pros::lcd::register_btn1_cb(on_center_button);
 }
 
 /**
@@ -141,51 +144,87 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+
+struct MotorValues{
+    int left, right;
+};
+
+typedef struct MotorValues Struct;
+
+Struct calcMotorPower(float radius, bool dir, float maxPower){
+    Struct motor;
+    float d = radius * 2;
+    float ratio = (d + 14.5)/(d - 14.5);
+
+    if (dir){
+        motor.left = maxPower;
+        motor.right = maxPower/ratio;
+    } else{
+        motor.right = maxPower;
+        motor.left = maxPower/ratio;
+    }
+    return motor;
+}
+
+float calc(float length, float height){
+    float r = ((length)*(length)/(8 * height)) + (height/2);
+    return r;
+}
+
 void autonomous() {
 //    std::string h = move(360, 75);
     double gearing = (double)left.getGearing();
-    profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
-    profileController->setTarget("A");
-    jawcontroller->setTarget(500);
-    profileController->generatePath({{0_in, 0_in, 0_deg}, {32_in, -32_in, 0_deg}}, "B");
-    profileController->waitUntilSettled();
 
-    jawcontroller->setTarget(100);
-    pros::delay(250);
-    profileController->setTarget("B");
-    liftcontroller->setTarget(2750);
-    profileController->removePath("A");
-    profileController->waitUntilSettled();
-    profileController->removePath("B");
+    Struct res;
 
-    liftcontroller->setTarget(2650);
-    pros::delay(250);
-    jawcontroller->setTarget(500);
-    pros::delay(250);
-    profileController->generatePath({{0_in, 0_in, 0_deg}, {32_in, -32_in, 180_deg}}, "C");
-    profileController->setTarget("C", true);
-    liftcontroller->setTarget(20);
-    profileController->waitUntilSettled();
+    float rad = calc(36, 10);
+    res = calcMotorPower(rad, true, 127);
+    while(true){
+        pros::lcd::set_text(0, std::to_string(rad));
+        pros::lcd::set_text(1, std::to_string(res.left));
+        pros::lcd::set_text(2, std::to_string(res.right));
+        pros::delay(10);
+//        setDrive(res.left, res.right);
+    }
 
-    pros::delay(250);
-    jawcontroller->setTarget(100);
-    profileController->setTarget("C");
-
-
-//    profileController->generatePath({{0_in, 0_in, 0_deg}, {32_in, 26_in, 0_deg}}, "A");
+//    Sensors_reset();
+//    tipcontroller->setTarget(3000);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {16_in, 0_in, 0_deg}}, "Z");
+//    profileController->setTarget("Z", true);
+//    profileController->waitUntilSettled();
+//    tipcontroller->waitUntilSettled();
+//    tipcontroller->setTarget(2000);
+//    tipcontroller->waitUntilSettled();
+//
+//    PIDTurn(-p/2);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
 //    profileController->setTarget("A");
-//    jawcontroller->setTarget(1000);
-//    profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "B");
+//    profileController->waitUntilSettled();
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {29_in, -26_in, 30_deg}}, "B");
 //    profileController->waitUntilSettled();
 //
+//    jawcontroller->setTarget(-250);
+//    jawcontroller->waitUntilSettled();
 //    profileController->setTarget("B");
-//    jawcontroller->setTarget(-1000);
-//    pros::delay(1000);
-//    liftcontroller->setTarget(2750);
-//    profileController->removePath("A");
+//    liftcontroller->setTarget(3500);
 //    profileController->waitUntilSettled();
+//    liftcontroller->waitUntilSettled();
+//    profileController->removePath("A");
 //    profileController->removePath("B");
 //
+//    liftcontroller->setTarget(2500);
+//    liftcontroller->waitUntilSettled();
+//    jawcontroller->setTarget(-20);
+//    jawcontroller->waitUntilSettled();
+//
+//    pros::lcd::set_text(7, "bum");
+//    PIDMove(-10);
+//    PIDTurn(p/6);
+
+
+
+
+
 //    profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "C");
 //    liftcontroller->setTarget(-400);
 //    jawcontroller->setTarget(1000);
@@ -276,117 +315,42 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 
-
 void opcontrol() {
-    while(true){
-        double *pos = position();
-        pros::lcd::set_text(0, std::to_string(pos[0]));
-        pros::lcd::set_text(1, std::to_string(pos[1]));
-        pros::lcd::set_text(2, std::to_string(pos[2]));
-        drive->getModel()->arcade(controller.getAnalog(okapi::ControllerAnalog::leftY),
-                                  controller.getAnalog(okapi::ControllerAnalog::leftX));
-        ControllerButton armUpButton(ControllerDigital::R1);
-        ControllerButton armDownButton(ControllerDigital::R2);
-        ControllerButton clawUp(ControllerDigital::L1);
-        ControllerButton clawDown(ControllerDigital::L2);
-        ControllerButton tipup(ControllerDigital::A);
-        ControllerButton tipdown(ControllerDigital::B);
-        if (armUpButton.isPressed()) {
-            arm.moveVoltage(12000);
-        } else if (armDownButton.isPressed() && arm.getPosition() != 0) {
-            arm.moveVoltage(-12000);
-        } else {
-            arm.moveVoltage(0);
-        }
-        if (clawUp.isPressed()){
-            jaw.moveVoltage(-12000);
-        } else if (clawDown.isPressed() && arm.getPosition() != 0){
-            jaw.moveVoltage(12000);
-        } else{
-            jaw.moveVoltage(0);
-        }
-        if (tipup.isPressed()){
-            tip.moveVoltage(12000);
-        } else if (tipdown.isPressed()){
-            tip.moveVoltage(-12000);
-        } else{
-            tip.moveVoltage(0);
-        }
-//        if (runAutoButton.changedToPressed()) {
-//            drive->moveDistance(6_in); // Drive forward 12 inches
-//            drive->stop();
-////            drive->turnAngle(90_deg);   // Turn in place 90 degrees
-////            drive->stop();
-//            // Drive the robot in a square pattern using closed-loop control
-////            for (int i = 0; i < 4; i++) {
-////                drive->moveDistance(6_in); // Drive forward 12 inches
-////                drive->stop();
-////                drive->turnAngle(90_deg);   // Turn in place 90 degrees
-////                drive->stop();
-////            }
-//        }
-//        pros::lcd::set_text(0, std::to_string(encoder_left.get_value()));
-//        pros::lcd::set_text(1, std::to_string(encoder_right.get_value()));
-
+//    Sensors_reset();
+//    pros::Task holdServiceClaw(holdClaw, (void*)"Claw");
+//    pros::Task holdServiceFork(holdFork, (void*)"Fork");
+    pros::Task holdService(holdFork, (void*)"Sub");
+    //    PIDMove(25);
+//    PIDTurn( p/2);
+    while (true){
+        drivemotors();
+        liftArm();
+        moveSub();
+        pros::lcd::set_text(2, std::to_string(claw.get_position()));
         pros::delay(10);
     }
-//    while(true) {
+
+//    while(true){
+////        double *pos = position();
+////        pros::lcd::set_text(0, std::to_string(pos[0]));
+////        pros::lcd::set_text(1, std::to_string(pos[1]));
+////        pros::lcd::set_text(2, std::to_string(pos[2]));
+//
 //        drivemotors();
 //        liftArm();
+//        moveJaw();
+//        moveTip();
+//
+////        drive->getModel()->arcade(controller.getAnalog(okapi::ControllerAnalog::leftY),
+////                                  controller.getAnalog(okapi::ControllerAnalog::leftX));
+////        ControllerButton armUpButton(ControllerDigital::R1);
+////        ControllerButton armDownButton(ControllerDigital::R2);
+////        ControllerButton clawUp(ControllerDigital::R1);
+////        ControllerButton clawDown(ControllerDigital::R2);
+////        ControllerButton tipup(ControllerDigital::L2);
+////        ControllerButton tipdown(ControllerDigital::L1);
+//
 //        pros::delay(10);
 //    }
-
-//	pros::lcd::set_text(2, "Hello 2 PROS!");
-//    while (true){
-//        drivemotors();
-//    }
-//
-
-//    double *globalPos;
-//    lv_obj_t *obj = drawRectangle( 25, 20, 100, 100, LV_COLOR_YELLOW);
-//    lv_canvas_draw_rect()
-//    Sensors_reset();
-
-//    while (true) {
-//        drive.arcade(con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X), con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-//        int xjoy = con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
-//        int yjoy = con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-//        pros::lcd::set_text(1, std::to_string(xjoy));
-//        pros::lcd::set_text(2, std::to_string(yjoy));
-//
-//        pros::lcd::set_text(3, std::to_string(yjoy + xjoy));
-//        pros::lcd::set_text(4, std::to_string(yjoy - xjoy));
-
-
-//        drivemotors();
-
-
-//        globalPos = position();
-//
-//        pros::lcd::set_text(3, std::to_string(globalPos[0]));
-//        pros::lcd::set_text(4, std::to_string(globalPos[1]));
-//        pros::lcd::set_text(5, std::to_string(globalPos[2]));
-
-//        pros::delay(10);
-//    }
-//    sensor.reset();
-//    while (true) {
-//        for(int i = 0; i < 10000; i++){
-//            pros::lcd::set_text(3, std::to_string(i));
-//        }
-////        pros::lcd::set_text(4, std::to_string(sensor.get_value()));
-//////        std::cout << "Encoder Value: " << enco.get_value();
-////        pros::delay(10);
-//    }
-//    imu_sensor.reset();
-//    pros::lcd::set_text(3, "hello");
-//	double angle = 50;
-//	double dam = imu_sensor.get_rotation();
-//	pros::lcd::set_text(5, std::to_string(dam));
-//	if(angle < dam){
-//	    pros::lcd::set_text(5, "wo");
-//	}else{
-//	    pros::lcd::set_text(5, "no");
-//	}
-
 }
+

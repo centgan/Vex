@@ -6,13 +6,15 @@ extern pros::Motor DRF;
 extern pros::Motor DLB;
 extern pros::Motor DRB;
 extern pros::Motor lift;
+extern pros::Motor claw;
+extern pros::Motor Fork;
 
 //globalizing okapi motors
 //extern MotorGroup left;
 //extern MotorGroup right;
-extern Motor arm;
-extern Motor jaw;
-extern Motor tip;
+//extern Motor arm;
+//extern Motor jaw;
+//extern Motor tip;
 
 //globalizing encoders
 extern pros::ADIEncoder encoder_right;

@@ -1,22 +1,24 @@
 #include "main.h"
 
-//Initializing Motors
 pros::Motor DLF(1, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor DRF(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor DRF(20, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor DLB(11, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor DRB(20, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor lift(12, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor claw(17, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor DRB(19, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
+
+pros::Motor lift(17, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor claw(12, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Fork(15, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
 
 //Initializing okapi Motors
 //okapi::MotorGroup left({13, 11});
 //okapi::MotorGroup right({-18, 20});
-okapi::Motor arm(-12);
-okapi::Motor jaw(-17);
-okapi::Motor tip(-14);
+//okapi::Motor arm(-12);
+//okapi::Motor jaw(-17);
+//okapi::Motor tip(-15);
+
 
 //Initializing Encoders
-pros::ADIEncoder encoder_right(7, 8, false);
+pros::ADIEncoder encoder_right(7, 8, true);
 pros::ADIEncoder encoder_left(5, 6, false);
 pros::ADIEncoder encoder_rear(3, 4, false);
 

@@ -73,8 +73,7 @@ double * position(){
     double x = circ * ((n1 + n2)/2);
     double y = circ * (n3 - (B * (n2 - n1)/L));
     double theta = circ * (n2 - n1)/L;
-    double degree = (theta * 180)/pi;
-
+//    double degree = (theta * 180)/pi;
 //        pros::lcd::set_text(3, std::to_string(x));
 //        pros::lcd::set_text(4, std::to_string(y));
 //        pros::lcd::set_text(5, std::to_string(theta));

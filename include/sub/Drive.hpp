@@ -4,14 +4,25 @@ void reset();
 
 void setDrive(int left, int right);
 
-void setArm(int power);
+void hold(void*param);
 
-void drivemotors(bool state = false);
+void holdClaw(void*param);
+
+void holdFork(void*param);
+
+void drivemotors();
 
 void liftArm();
 
-std::string move(int units, int volt);
+void moveSub();
 
-std::string turn(double angle, int volt);
+void moveJaw();
 
-std::string sTurn(const double *x, double y, int volt);
+void moveTip();
+
+void PIDMove(double units);
+
+void PIDTurn(double radians);
+
+//void dubinsCurve(float coords[][3], bool reverse);
+
