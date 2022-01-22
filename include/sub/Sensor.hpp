@@ -4,6 +4,8 @@ void inertial(bool heading);
 
 void Sensors_reset();
 
-double * position();
+void position(void *param);
 
 double * straight();
+
+extern double globalPos[3];

@@ -11,8 +11,8 @@ const double tkp = 17;
 const double tkd = 5;
 const double tki = 0;
 
-const double turnkp = 130;
-const double turnkd = 11;
+double turnkp = 175;
+const double turnkd = 23;
 const double turnki = 0;
 
 void reset(){
@@ -42,13 +42,12 @@ short forkPos;
 short clawPos;
 void holdFork(void*param){
     while(true){
-        pros::lcd::set_text(5, "this is running");
         if (moveHoldFork){
             forkPos = Fork.get_position();
         }
         while(moveHoldFork){
-            Fork.move((forkPos - Fork.get_position())*2);
-            pros::delay(10);
+            Fork.move((forkPos - Fork.get_position())*2.5);
+            pros::lcd::set_text(5, std::to_string((forkPos - Fork.get_position()) * 2.5));
         }
         pros::delay(10);
     }
@@ -139,6 +138,11 @@ void liftArm(){
         else {
             armPwr = (5*pow((1.0/5.5)*(armPos/10.0), 3.0) * 12.7) * 1;
         }
+        if (lift.get_position() > 400){
+            intake.move_voltage(8000);
+        } else{
+            intake.move_voltage(0);
+        }
     }else {
         armPwr = 0;
     }
@@ -156,12 +160,13 @@ void moveSub(){
     } else {
         claw.move_voltage(0);
     }
-    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 3000){
-        pros::lcd::set_text(0, "L2 pressed");
-        Fork.move_voltage(9000);
+    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 3100){
+//        Fork.move_absolute(3000, 100);
+        Fork.move_voltage(11000);
         moveHoldFork = false;
-    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && Fork.get_position() > 100){
-        Fork.move_voltage(-9000);
+    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && Fork.get_position() > 2000){
+//        Fork.move_absolute(1000, 100);
+        Fork.move_voltage(-11000);
         moveHoldFork = false;
     } else{
         Fork.move_voltage(0);
@@ -169,31 +174,31 @@ void moveSub(){
     }
 }
 
-void moveJaw(){
-    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-        claw.move_voltage(-4500);
-        moveHoldClaw = false;
-    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-        claw.move_voltage(4500);
-        moveHoldClaw = false;
-    } else{
-        claw.move_voltage(0);
-        moveHoldClaw = true;
-    }
-}
-
-void moveTip(){
-    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 3000){
-        Fork.move_voltage(7500);
-        moveHoldFork = false;
-    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && Fork.get_position() > 100){
-        Fork.move_voltage(-7500);
-        moveHoldFork = false;
-    } else{
-        Fork.move_voltage(0);
-        moveHoldFork = true;
-    }
-}
+//void moveJaw(){
+//    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+//        claw.move_voltage(-4500);
+//        moveHoldClaw = false;
+//    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+//        claw.move_voltage(4500);
+//        moveHoldClaw = false;
+//    } else{
+//        claw.move_voltage(0);
+//        moveHoldClaw = true;
+//    }
+//}
+//
+//void moveTip(){
+//    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 3000){
+//        Fork.move_voltage(7500);
+//        moveHoldFork = false;
+//    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && Fork.get_position() > 100){
+//        Fork.move_voltage(-7500);
+//        moveHoldFork = false;
+//    } else{
+//        Fork.move_voltage(0);
+//        moveHoldFork = true;
+//    }
+//}
 
 //float left, right;
 ////true is right, false is left
@@ -237,35 +242,31 @@ void moveTip(){
 //}
 
 void PIDMove(double units){
+    enable = true;
     while(enable) {
-        double *pos = position();
-        P = units - pos[0];
+        P = units - globalPos[0];
         I += P;
         D = P - preP;
 
-        tP = pos[2];
+        tP = globalPos[2];
         tI += tP;
         tD = tP - preTheta;
 
         PID = (P * kp) + (D * kd) + (I * ki);
         tPID = (tP * tkp) + (tD * tkd) + (tI * tki);
-        pros::lcd::set_text(0, std::to_string(pos[0]));
-        pros::lcd::set_text(1, std::to_string(pos[2]));
+        pros::lcd::set_text(7, "now running");
+//        pros::lcd::set_text(0, std::to_string(pos[0]));
+//        pros::lcd::set_text(1, std::to_string(pos[2]));
 //        pros::lcd::set_text(0, std::to_string(P));
 //        pros::lcd::set_text(1, std::to_string(I));
 //        pros::lcd::set_text(2, std::to_string(D));
-        pros::lcd::set_text(3, std::to_string(PID));
-        pros::lcd::set_text(4, std::to_string(tPID));
-
-//        if (units < 0){
-//            PID = PID * -1;
-//            tPID = tPID * -1;
-//        }
+//        pros::lcd::set_text(3, std::to_string(PID));
+//        pros::lcd::set_text(4, std::to_string(tPID));
 
         setDrive(PID + tPID, PID - tPID);
         preP = P;
         preTheta = tP;
-        if ((units == pos[0]) || (((P < 0.03) && (P > -0.03)))) {
+        if ((units == globalPos[0]) || (((P < 0.03) && (P > -0.03)))) {
             enable = false;
             break;
         }
@@ -301,29 +302,121 @@ void PIDMove(double units){
 //    }
 }
 
+//true is right, false is left
+const float cir = p * 2.75;
+float leftMotor, rightMotor;
+void moveArc(double radians, float length, float height, bool dir, int maxPower, int minPower){
+    double *start = straight();
 
-void PIDTurn(double radians){
+    float radius = ((length)*(length)/(8 * height)) + (height/2);
+    float ave = (((start[0] + start[1])/2)/360)*cir;
+    float arc = radians * radius;
+
+    float d = radius * 2;
+    float ratio = (d + 14.5)/(d - 14.5);
+    if (minPower == 0){
+        if (dir){
+            leftMotor = maxPower;
+            rightMotor = maxPower/ratio;
+        } else{
+            rightMotor = maxPower;
+            leftMotor = maxPower/ratio;
+        }
+    } else if(maxPower == 0 && minPower > 0){
+        if (dir){
+            leftMotor = ratio * minPower;
+            rightMotor = minPower;
+        } else{
+            rightMotor = ratio * minPower;
+            leftMotor = minPower;
+        }
+    }
+    while (true){
+        double *pos = straight();
+        double posAve = (((pos[0] + pos[1])/2)/360)*cir;
+        if ((posAve - ave) > arc){
+            break;
+        }
+        setDrive(leftMotor, rightMotor);
+    }
+}
+
+//neg radians turns right
+void PIDTurnAbs(double radians, bool small){
+    enable = true;
     while(enable){
-        double *pos = position();
 
-        turnP = radians - pos[2];
+        turnP = radians - globalPos[2];
         turnI += turnP;
         turnD = turnP - preTurn;
+        if(small) {
+            turnkp = 160;
+        }
         turnPID = (turnP * turnkp) + (turnD * turnkd) + (turnI * turnki);
-        setDrive(-1*turnPID, 1*turnPID);
+        pros::lcd::set_text(0, std::to_string(turnPID));
+        pros::lcd::set_text(1, std::to_string(turnP));
+//        if (turnPID >=  10){
+//            turnPID = turnPID * 10;
+//        }else {
+//            turnPID = turnPID * 1.25;
+//        }
+        setDrive(-turnPID, turnPID);
 //        pros::lcd::set_text(0, std::to_string(P));
 //        pros::lcd::set_text(1, std::to_string(I));
 //        pros::lcd::set_text(2, std::to_string(D));
-        pros::lcd::set_text(2, std::to_string(turnPID));
-        pros::lcd::set_text(3, std::to_string(pos[2]));
-        if (radians == pos[2] || ((turnP < 0.05) && (turnP > -0.05))) {
+        pros::lcd::set_text(3, std::to_string(globalPos[2]));
+        pros::lcd::set_text(4, std::to_string(radians - globalPos[2]));
+
+        double rounded = round(turnP * 100) / 100;
+//        if (radians == pos[2] || ((rounded <= 0.01) && (rounded >= -0.01))) {
+//            enable = false;
+//            break;
+//        }
+        if (radians == globalPos[2] || ((abs(radians - globalPos[2]) < 0.01) && abs(turnPID) <= 10)){
             enable = false;
             break;
         }
         preTurn = turnP;
-        pros::delay(20);
+        pros::delay(2);
     }
 }
+double *prePosTurn;
+
+//void PIDTurnRel(double radians){
+//    enable = true;
+//    bool first = true;
+//    while(enable){
+//        if (first){
+//            prePosTurn = position();
+//            first = false;
+//        }
+//
+//        turnP = (radians + prePosTurn[2]) - pos[2];
+//        turnI += turnP;
+//        turnD = turnP - preTurn;
+//        turnPID = (turnP * turnkp) + (turnD * turnkd) + (turnI * turnki);
+//
+////        if (turnPID >=  10){
+////            turnPID = turnPID * 2;
+////        }
+//        setDrive(-turnPID, turnPID);
+//        pros::lcd::set_text(0, std::to_string(pos[2]));
+//        pros::lcd::set_text(1, std::to_string(turnPID));
+//        pros::lcd::set_text(2, std::to_string(prePosTurn[2]+radians));
+//        pros::lcd::set_text(3, std::to_string(turnP));
+//        pros::lcd::set_text(4, std::to_string(prePosTurn[2]));
+//        pros::lcd::set_text(5, std::to_string(pos[2]));
+//
+//
+//        if ((prePosTurn[2]+radians) == pos[2] || (abs((prePosTurn[2]+radians) - pos[2]) < 0.01)){
+//            enable = false;
+//            break;
+//        }
+//        preTurn = turnP;
+//        pros::delay(5);
+//    }
+//}
+
 
 // working only with global positions
 // 2d array of row 1 being starting coords

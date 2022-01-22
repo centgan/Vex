@@ -8,6 +8,7 @@ extern pros::Motor DRB;
 extern pros::Motor lift;
 extern pros::Motor claw;
 extern pros::Motor Fork;
+extern pros::Motor intake;
 
 //globalizing okapi motors
 //extern MotorGroup left;
@@ -29,3 +30,5 @@ extern pros::Controller con;
 
 //globalizing okapi controller
 extern Controller controller;
+
+extern const double p;
