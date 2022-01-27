@@ -97,6 +97,6 @@ void position(void*param){
         prePos[0] = curPos[0];
         prePos[1] = curPos[1];
         prePos[2] = curPos[2];
-        pros::delay(2);
+        pros::delay(1);
     }
 }

@@ -163,10 +163,10 @@ void competition_initialize() {}
 
 void autonomous() {
 //    std::string h = move(360, 75);
-    pros::Task positionService(position, (void*)"Claw");
+    pros::Task positionService(position, (void*)"Od");
     double gearing = (double)left.getGearing();
 //    double *pos = position();
-//    Sensors_reset();
+    Sensors_reset();
 
     tipcontroller->setMaxVelocity(150);
     tipcontroller->setTarget(3000);
@@ -179,7 +179,7 @@ void autonomous() {
 
     moveArc(p/5, 32, 15, true, 100, 0);
     profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "Y");
-    PIDTurnAbs(-1.88);
+    PIDTurnAbs(-1.87);
     profileController->setTarget("Y");
     profileController->waitUntilSettled();
 
@@ -225,6 +225,7 @@ void autonomous() {
     profileController->setTarget("Y");
     liftcontroller->setTarget(50);
     profileController->waitUntilSettled();
+
 //    tipcontroller->setTarget(3100);
 //    tipcontroller->waitUntilSettled();
 //    profileController->setTarget("D");
@@ -248,7 +249,6 @@ void autonomous() {
 //    tipcontroller->setTarget(2000);
 //    tipcontroller->waitUntilSettled();
 //    profileController->setTarget("E");
-
 }
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -269,6 +269,7 @@ void opcontrol() {
 //    pros::Task holdServiceFork(holdFork, (void*)"Fork");
     pros::Task holdService(holdFork, (void*)"Sub");
     while (true){
+        pros::lcd::set_text(7, std::to_string(globalPos[2]));
         drivemotors();
         liftArm();
         moveSub();

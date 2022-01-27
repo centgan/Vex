@@ -11,9 +11,21 @@ const double tkp = 17;
 const double tkd = 5;
 const double tki = 0;
 
-double turnkp = 175;
+//double turnkp = 350;
+//const double turnkd = 30;
+//const double turnki = 0.5;
+
+//double turnkp = 275;
+//const double turnkd = 5;
+//const double turnki = 0.5;
+
+//double turnkp = 350;
+//const double turnkd = 7;
+//const double turnki = 0.7;
+
+double turnkp = 185;
 const double turnkd = 23;
-const double turnki = 0;
+const double turnki = 0.5;
 
 void reset(){
     DLF.tare_position();
@@ -139,7 +151,7 @@ void liftArm(){
             armPwr = (5*pow((1.0/5.5)*(armPos/10.0), 3.0) * 12.7) * 1;
         }
         if (lift.get_position() > 400){
-            intake.move_voltage(8000);
+            intake.move_voltage(11000);
         } else{
             intake.move_voltage(0);
         }
@@ -244,7 +256,7 @@ void moveSub(){
 void PIDMove(double units){
     enable = true;
     while(enable) {
-        P = units - globalPos[0];
+        P = (units+0.1) - globalPos[0];
         I += P;
         D = P - preP;
 
@@ -372,12 +384,12 @@ void PIDTurnAbs(double radians, bool small){
 //            enable = false;
 //            break;
 //        }
-        if (radians == globalPos[2] || ((abs(radians - globalPos[2]) < 0.01) && abs(turnPID) <= 10)){
+        if (radians == globalPos[2] || ((abs(radians - globalPos[2]) < 0.007) && abs(turnPID) <= 11)){
             enable = false;
             break;
         }
         preTurn = turnP;
-        pros::delay(2);
+        pros::delay(1);
     }
 }
 double *prePosTurn;
