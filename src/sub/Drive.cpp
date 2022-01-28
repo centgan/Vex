@@ -3,13 +3,13 @@
 double P, tP, turnP;
 double tD, tI, D, I, turnD, turnI, preTheta, preP, preTurn, tPID, PID, turnPID = 0;
 bool enable = true;
-const double kp = 15;
-const double kd = 10;
-const double ki = 0;
+const double kp = 30;
+const double kd = 15;
+const double ki = 0.01;
 
-const double tkp = 17;
-const double tkd = 5;
-const double tki = 0;
+const double tkp = 15;
+const double tkd = 15;
+const double tki = 0.02;
 
 //double turnkp = 350;
 //const double turnkd = 30;
@@ -22,10 +22,11 @@ const double tki = 0;
 //double turnkp = 350;
 //const double turnkd = 7;
 //const double turnki = 0.7;
+//
+double turnkp = 350;  //175
+const double turnkd = 15;  //25
+const double turnki = 0.01; //0.5
 
-double turnkp = 185;
-const double turnkd = 23;
-const double turnki = 0.5;
 
 void reset(){
     DLF.tare_position();
@@ -253,36 +254,46 @@ void moveSub(){
 //    prePos = pos;
 //}
 
-void PIDMove(double units){
+//0 is x, 1 is y
+void PIDMove(double units, double angle, int xY){
     enable = true;
     while(enable) {
-        P = (units+0.1) - globalPos[0];
+
+        P = units - globalPos[xY];
+        if (units < 0){
+            P = P*-1;
+            globalPos[xY] = globalPos[xY]*-1;
+        }
         I += P;
         D = P - preP;
 
-        tP = globalPos[2];
+        tP = globalPos[2] - angle;
         tI += tP;
         tD = tP - preTheta;
 
         PID = (P * kp) + (D * kd) + (I * ki);
         tPID = (tP * tkp) + (tD * tkd) + (tI * tki);
-        pros::lcd::set_text(7, "now running");
-//        pros::lcd::set_text(0, std::to_string(pos[0]));
-//        pros::lcd::set_text(1, std::to_string(pos[2]));
+        pros::lcd::set_text(0, std::to_string(globalPos[0]));
+        pros::lcd::set_text(1, std::to_string(globalPos[1]));
 //        pros::lcd::set_text(0, std::to_string(P));
 //        pros::lcd::set_text(1, std::to_string(I));
 //        pros::lcd::set_text(2, std::to_string(D));
-//        pros::lcd::set_text(3, std::to_string(PID));
-//        pros::lcd::set_text(4, std::to_string(tPID));
+        pros::lcd::set_text(3, std::to_string(PID));
+        pros::lcd::set_text(4, std::to_string(tPID));
+        pros::lcd::set_text(5, std::to_string(globalPos[xY]-units));
+        pros::lcd::set_text(6, std::to_string(globalPos[2]-angle));
+
 
         setDrive(PID + tPID, PID - tPID);
+
         preP = P;
         preTheta = tP;
-        if ((units == globalPos[0]) || (((P < 0.03) && (P > -0.03)))) {
+        if ((units == globalPos[xY]) || ((round(abs(globalPos[xY]-units))*100.0 )/100.0 < 0.02 && abs(globalPos[2]-angle) < 0.007)) {
+            setDrive(0, 0);
             enable = false;
             break;
         }
-        pros::delay(20);
+        pros::delay(1);
     }
 
 //    double ave = pos[0];
@@ -317,7 +328,7 @@ void PIDMove(double units){
 //true is right, false is left
 const float cir = p * 2.75;
 float leftMotor, rightMotor;
-void moveArc(double radians, float length, float height, bool dir, int maxPower, int minPower){
+void moveArc(double radians, float length, float height, bool dir, bool reverse, int maxPower, int minPower){
     double *start = straight();
 
     float radius = ((length)*(length)/(8 * height)) + (height/2);
@@ -345,11 +356,33 @@ void moveArc(double radians, float length, float height, bool dir, int maxPower,
     }
     while (true){
         double *pos = straight();
+        if (reverse){
+            pos[0] = pos[0] * -1;
+            pos[1] = pos[1] * -1;
+        }
         double posAve = (((pos[0] + pos[1])/2)/360)*cir;
+        pros::lcd::set_text(0, std::to_string(pos[0]));
+        pros::lcd::set_text(1, std::to_string(pos[1]));
+        pros::lcd::set_text(2, std::to_string(posAve));
+
         if ((posAve - ave) > arc){
+            setDrive(0, 0);
             break;
         }
-        setDrive(leftMotor, rightMotor);
+        if (reverse){
+            if ((posAve + ave) > arc){
+                setDrive(0, 0);
+                break;
+            }
+            setDrive(leftMotor*-1, rightMotor*-1);
+        } else{
+            if ((posAve - ave) > arc){
+                setDrive(0, 0);
+                break;
+            }
+            setDrive(leftMotor, rightMotor);
+        }
+        pros::delay(1);
     }
 }
 

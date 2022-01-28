@@ -75,6 +75,7 @@ void opcontrol(void);
 #include "sub/Drive.hpp"
 #include "sub/Global.hpp"
 #include "sub/Sensor.hpp"
+#include "sub/Auto.hpp"
 /**
  * You can add C++-only headers here
  */
