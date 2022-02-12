@@ -24,9 +24,11 @@ void PIDMove(double units, double angle, int xY);
 
 void moveArc(double radians, float length, float height, bool dir, bool reverse = false, int maxPower = 0, int minPower = 0);
 
-void PIDTurnAbs(double radians, bool small = false);
+void PIDTurnAbs(double radians, int weight);
 
 void PIDTurnRel(double radians);
 
 //void dubinsCurve(float coords[][3], bool reverse);
+
+extern bool moveHoldFork;
 

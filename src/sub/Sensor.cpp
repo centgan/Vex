@@ -90,13 +90,22 @@ void position(void*param){
         globalPos[2] += theta;
 
 
-        pros::lcd::set_text(3, std::to_string(globalPos[0]));
+//        pros::lcd::set_text(3, std::to_string(globalPos[0]));
 //    pros::lcd::set_text(4, std::to_string(globalPos[1]));
 //    pros::lcd::set_text(5, std::to_string(globalPos[2]));
 
         prePos[0] = curPos[0];
         prePos[1] = curPos[1];
         prePos[2] = curPos[2];
+        pros::delay(1);
+    }
+}
+
+void guard(void*param) {
+    while (true) {
+        if (globalPos[0] >= 83){
+            setDrive(0, 0);
+        }
         pros::delay(1);
     }
 }

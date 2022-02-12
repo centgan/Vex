@@ -9,3 +9,5 @@ void position(void *param);
 double * straight();
 
 extern double globalPos[3];
+
+void guard(void *param);
