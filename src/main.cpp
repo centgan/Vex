@@ -71,6 +71,149 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {}
+	//drive backwards and drop 3 rings and then pick up goal
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
+	profileController->setTarget("A", "true");
+	profileController->waitUntilSettled();
+	forkcontroller->setTarget(500);
+	forkcontroller->waitUntilSettled();
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {4_in, 0_in, 0_deg}}, "A");
+	profileController->setTarget("A");
+	forkcontroller->setTarget(1850);
+	forkcontroller->waitUntilSettled();
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {5_in, 0_in, 0_deg}}, "A");
+	profileController->setTarget("A", "true");
+	forkcontroller->setTarget(1000);
+	forkcontroller->waitUntilSettled();
+	
+//turn to face neutral goal
+	leftsidecontroller->setTarget(FLeft.get_position()+1000);
+	rightsidecontroller->setTarget(FRight.get_position() + 200);
+	leftsidecontroller->waitUntilSettled();
+
+//pickup and stack first neutral goal
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
+	profileController->setTarget("A");
+	profileController->waitUntilSettled();
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, -24_in, 30_deg}}, "B");
+	jawcontroller->setTarget(-350);
+	jawcontroller->waitUntilSettled();
+	profileController->setTarget("B");
+	liftcontroller->setTarget(3500);
+	liftcontroller->waitUntilSettled();
+	profileController->waitUntilSettled();
+	liftcontroller->setTarget(2600);
+	liftcontroller->waitUntilSettled();
+	jawcontroller->setTarget(-20);
+
+//drive back, 180, drop alliance gaol and push large neutral into red zone
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {6_in, 0_in, 0_deg}}, "A");
+	profileController->setTarget("A", "true");
+	profileController->waitUntilSettled();
+	leftsidecontroller->setTarget(FLeft.get_position() - 800);
+	rightsidecontroller->setTarget(FRight.get_position() + 800);
+	leftsidecontroller->waitUntilSettled();
+	rightsidecontroller->waitUntilSettled();
+	forkcontroller->setTarget(1850);
+	forkcontroller->waitUntilSettled();
+
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {45_in, 0_in, 0_deg}}, "A");
+	profileController->setTarget("A", "true");
+	pros::delay(300);
+	forkcontroller->setTarget(10);
+	profileController->waitUntilSettled();
+
+//90 turn to drive back and fork second alliance gaol
+leftsidecontroller->setTarget(FLeft.get_position() - 400);
+rightsidecontroller->setTarget(FRight.get_position() + 400);
+leftsidecontroller->waitUntilSettled();
+rightsidecontroller->waitUntilSettled();
+profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A", "true");
+forkcontroller->setTarget(1850);
+profileController->waitUntilSettled();
+forkcontroller->setTarget(1000);
+
+//90 turn to face 3rd neutral goal
+leftsidecontroller->setTarget(FLeft.get_position() - 800);
+rightsidecontroller->setTarget(FRight.get_position() + 300);
+leftsidecontroller->waitUntilSettled();
+rightsidecontroller->waitUntilSettled();
+
+//stack 3rd neutral goal
+profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
+profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, -22_in, 30_deg}}, "B");
+jawcontroller->setTarget(-350);
+jawcontroller->waitUntilSettled();
+profileController->setTarget("B");
+liftcontroller->setTarget(3500);
+liftcontroller->waitUntilSettled();
+profileController->waitUntilSettled();
+liftcontroller->setTarget(2600);
+liftcontroller->waitUntilSettled();
+jawcontroller->setTarget(-20);
+
+//turn 90, drop alliance, stack other alliance
+profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A", "true");
+profileController->waitUntilSettled();
+leftsidecontroller->setTarget(FLeft.get_position() - 400);
+rightsidecontroller->setTarget(FRight.get_position() + 400);
+leftsidecontroller->waitUntilSettled();
+rightsidecontroller->waitUntilSettled();
+forkcontroller->setTarget(1850);
+profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
+jawcontroller->setTarget(-800);
+liftcontroller->setTarget(3500);
+liftcontroller->waitUntilSettled();
+leftsidecontroller->setTarget(FLeft.get_position() + 400);
+rightsidecontroller->setTarget(FRight.get_position() - 400);
+profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
+liftcontroller->setTarget(2600);
+liftcontroller->waitUntilSettled();
+jawcontroller->setTarget(-20);
+pros::delay(100);
+
+//turn 90 grab red alliance turn 90 and drive to position to climb on red
+profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A", "true");
+profileController->waitUntilSettled();
+leftsidecontroller->setTarget(FLeft.get_position() + 400);
+rightsidecontroller->setTarget(FRight.get_position() - 400);
+liftcontroller->setTarget(10);
+profileController->generatePath({{0_in, 0_in, 0_deg}, {32_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
+jawcontroller->setTarget(-800);
+leftsidecontroller->setTarget(FLeft.get_position() - 400);
+rightsidecontroller->setTarget(FRight.get_position() + 400);
+leftsidecontroller->waitUntilSettled();
+rightsidecontroller->waitUntilSettled();
+profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
+leftsidecontroller->setTarget(FLeft.get_position() - 400);
+rightsidecontroller->setTarget(FRight.get_position() + 400);
+leftsidecontroller->waitUntilSettled();
+rightsidecontroller->waitUntilSettled();
+
+//climb red platform with 1 alliance in claw
+liftcontroller->setTarget(2500);
+pros::delay(250);
+profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
+liftcontroller->setTarget(10);
+liftcontroller->waitUntilSettled();
+profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
+profileController->setTarget("A");
+profileController->waitUntilSettled();
 
 /**
  * Runs the operator control code. This function will be started in its own task
