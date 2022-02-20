@@ -14,6 +14,8 @@ pros::Motor Lift(18, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUN
 pros::Motor Claw(12, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor Fork(10, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
 
+pros::Imu inertial_sensor(1);
+
 
 pros::Controller Master (pros::E_CONTROLLER_MASTER);
 // pros::ADIEncoder encoder_right(7, 8, false);
@@ -106,10 +108,10 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+	pros::lcd::set_text(1, "I'm hungry!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
-	//autonomous();
+	autonomous();
 
 	// pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 	// pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
