@@ -3,7 +3,7 @@
 //constants
 const double circ = (p * 2.75)/360;
 const double L = 9.25;
-const double B = 3;
+const double B = 4;
 
 //left, right, back, heading encoder values
 double prePos[3] = {0, 0, 0};
@@ -71,9 +71,9 @@ void position(void*param){
         double n2 = curPos[1] - prePos[1];
         double n3 = curPos[2] - prePos[2];
 
-//    pros::lcd::set_text(0, std::to_string(curPos[0]));
-//    pros::lcd::set_text(1, std::to_string(curPos[1]));
-//    pros::lcd::set_text(2, std::to_string(curPos[2]));
+//        pros::lcd::set_text(0, std::to_string(curPos[0]));
+//        pros::lcd::set_text(1, std::to_string(curPos[1]));
+//        pros::lcd::set_text(2, std::to_string(curPos[2]));
 
         double x = circ * ((n1 + n2)/2);
         double y = circ * (n3 - (B * (n2 - n1)/L));
@@ -90,9 +90,9 @@ void position(void*param){
         globalPos[2] += theta;
 
 
-//        pros::lcd::set_text(3, std::to_string(globalPos[0]));
-//    pros::lcd::set_text(4, std::to_string(globalPos[1]));
-//    pros::lcd::set_text(5, std::to_string(globalPos[2]));
+        pros::lcd::set_text(3, std::to_string(globalPos[0]));
+        pros::lcd::set_text(4, std::to_string(globalPos[1]));
+        pros::lcd::set_text(5, std::to_string(globalPos[2]));
 
         prePos[0] = curPos[0];
         prePos[1] = curPos[1];

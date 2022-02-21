@@ -23,11 +23,11 @@ const double tki = 0.04;
 //const double turnkd = 7;
 //const double turnki = 0.7;
 //
-double turnkp = 185;  //175
-const double turnkd = 14.85;  //25
-const double turnkin = 0.6; //0.5    0.3  1.567
-const double turnkif = 0.57;
-const double turnkib = 0.49;
+double turnkp = 220;  //185 220
+const double turnkd = 12.95;  //25  15
+const double turnkin = 0.0; //0.6    0.3  1.567
+const double turnkif = 0.0; //0.57
+const double turnkib = 0.0; //0.49
 
 
 
@@ -156,7 +156,7 @@ void liftArm(){
             armPwr = (5*pow((1.0/5.5)*(armPos/10.0), 3.0) * 12.7) * 1;
         }
         if (lift.get_position() > 400){
-            intake.move_voltage(12000);
+            intake.move_voltage(-12000);
         } else{
             intake.move_voltage(0);
         }
@@ -177,7 +177,7 @@ void moveSub(){
     } else {
         claw.move_voltage(0);
     }
-    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 2800){
+    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 3000){
 //        Fork.move_absolute(3000, 100);
 //        tipcontroller->setTarget(3100);
         Fork.move_voltage(11000);
@@ -380,28 +380,36 @@ void moveArc(double radians, float length, float height, bool dir, bool reverse,
             if (abs(posAve + ave) > arc){
                 setDrive(0, 0);
                 break;
+            }else {
+                setDrive(leftMotor*-1, rightMotor*-1);
             }
-            setDrive(leftMotor*-1, rightMotor*-1);
+
         } else{
             if (abs(posAve - ave) > arc){
                 setDrive(0, 0);
                 break;
+            }else{
+                setDrive(leftMotor, rightMotor);
             }
-            setDrive(leftMotor, rightMotor);
+
         }
         pros::delay(1);
     }
 }
 
 double turnki;
+bool correct;
+double preAngle;
+double preVolt = 0;
+double voltSum;
+int preVal;
+int counter = 0;
 //neg radians turns right
 void PIDTurnAbs(double radians, int weight){
     enable = true;
+    correct = false;
+    counter = 0;
     while(enable){
-        if (radians == globalPos[2] || ((abs(radians - globalPos[2]) < 0.004) && abs(turnPID) <= 11)){
-            enable = false;
-            break;
-        }
         turnP = radians - globalPos[2];
         turnI += turnP;
         turnD = turnP - preTurn;
@@ -414,27 +422,47 @@ void PIDTurnAbs(double radians, int weight){
             turnki = turnkib;
         }
         turnPID = (turnP * turnkp) + (turnD * turnkd) + (turnI * turnki);
-        pros::lcd::set_text(0, std::to_string(turnPID));
-        pros::lcd::set_text(1, std::to_string(turnP));
+        pros::lcd::set_text(0, std::to_string(DLF.get_voltage()));
+        pros::lcd::set_text(1, std::to_string(radians - globalPos[2]));
+        pros::lcd::set_text(2, std::to_string(preAngle-globalPos[2]));
+        pros::lcd::set_text(3, std::to_string(globalPos[2]));
+
+        if (abs(DLF.get_voltage()) < 500 && abs(radians-globalPos[2]) < 0.004){
+            enable = false;
+            setDrive(0, 0);
+            break;
+        }
+        if (abs(DLF.get_voltage()) <= 80 && ((preAngle-globalPos[2]) == 0) && abs(radians-globalPos[2]) < 0.3 && preVal == encoder_left.get_value()){
+            enable = false;
+            setDrive(0, 0);
+            break;
+        }
+
+        setDrive(-turnPID, turnPID);
+//        pros::lcd::set_text(0, std::to_string(turnPID));
+//        pros::lcd::set_text(1, std::to_string(turnP));
 //        if (turnPID >=  10){
 //            turnPID = turnPID * 10;
 //        }else {
 //            turnPID = turnPID * 1.25;
 //        }
-        setDrive(-turnPID, turnPID);
+
+//        if ((abs(radians - globalPos[2]) > 0.004) &&(abs(DLF.get_voltage()) <= 500)){
+//            turnPID = turnPID * 4.75;
+//        }
+
+
 //        pros::lcd::set_text(0, std::to_string(P));
 //        pros::lcd::set_text(1, std::to_string(I));
 //        pros::lcd::set_text(2, std::to_string(D));
-        pros::lcd::set_text(3, std::to_string(globalPos[2]));
-        pros::lcd::set_text(4, std::to_string(radians - globalPos[2]));
+//        pros::lcd::set_text(3, std::to_string(globalPos[2]));
+//        pros::lcd::set_text(4, std::to_string(radians - globalPos[2]));
 
-        double rounded = round(turnP * 100) / 100;
-//        if (radians == pos[2] || ((rounded <= 0.01) && (rounded >= -0.01))) {
-//            enable = false;
-//            break;
-//        }
 
         preTurn = turnP;
+        preVal = encoder_left.get_value();
+        preAngle = globalPos[2];
+        preVolt = abs(DLF.get_voltage());
         pros::delay(1);
     }
 }

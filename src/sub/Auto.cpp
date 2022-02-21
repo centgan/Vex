@@ -1,7 +1,7 @@
 #include "main.h"
 
-MotorGroup left({3, 16});
-MotorGroup right({5, 15});
+MotorGroup left({19, 13});
+MotorGroup right({9, 14});
 std::shared_ptr<OdomChassisController> chassis =
         ChassisControllerBuilder()
                 .withMotors(left, right) // left motor is 1, right motor is 2 (reversed)
@@ -59,115 +59,164 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 
 std::shared_ptr<AsyncPositionController<double, double>> jawcontroller =
         AsyncPosControllerBuilder()
-                .withMotor(8) // lift motor port 3
+                .withMotor(18) // lift motor port 3
 //        .withGains({liftkP, liftkI, liftkD})
                 .build();
 
 std::shared_ptr<AsyncPositionController<double, double>> liftcontroller =
         AsyncPosControllerBuilder()
-                .withMotor(1) // lift motor port 3
+                .withMotor(11) // lift motor port 3
 //        .withGains({liftkP, liftkI, liftkD})
                 .build();
 
 std::shared_ptr<AsyncPositionController<double, double>> tipcontroller =
         AsyncPosControllerBuilder()
-                .withMotor(4)
+                .withMotor(15)
 //        .withGains({liftkP, liftkI, liftkD})
                 .build();
 
 std::shared_ptr<AsyncPositionController<double, double>> intakecontroller =
         AsyncPosControllerBuilder()
-                .withMotor(2)
+                .withMotor(17)
 //        .withGains({liftkP, liftkI, liftkD})
                 .build();
 
 void skills(){
-//    tipcontroller->setTarget(2700);
-//    profileControllers->generatePath({{0_in, 0_in, 0_deg}, {17.5_in, 0_in, 0_deg}}, "Z");
+
+////    back up into mobile goal
+//    tipcontroller->setTarget(2650);
+//    profileControllers->generatePath({{0_in, 0_in, 0_deg}, {17_in, 0_in, 0_deg}}, "Z");
 //    profileControllers->setTarget("Z", true);
 //    profileControllers->waitUntilSettled();
 //    tipcontroller->waitUntilSettled();
 //    tipcontroller->setTarget(2000);
 //    tipcontroller->waitUntilSettled();
 //
-//    moveArc(1.22, 20, 10, true, false, 127, 0);
+//    //make arc and turn to get into open space and drive to neutral mobile goal
+//    moveArc(p/3, 32, 15, true, false,100, 0);
 //    profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "Y");
-//    PIDTurnAbs(-1.87);
+//    PIDTurnAbs(-1.95, 1);
 //    profileController->setTarget("Y");
 //    profileController->waitUntilSettled();
 //
-//    profileControllerm->generatePath({{0_in, 0_in, 0_deg}, {20_in, -28_in, 0_deg}}, "B");
+//    //clamp down on yellow and lift arm, so it doesn't interfere with driving
+//    profileControllerm->generatePath({{0_in, 0_in, 0_deg}, {30_in, -14_in, 30_deg}}, "B");
 //    jawcontroller->setTarget(-260);
 //    jawcontroller->waitUntilSettled();
-//    liftcontroller->setTarget(500);
+//    liftcontroller->setTarget(1000);
 //    liftcontroller->waitUntilSettled();
-//    PIDTurnAbs(-p/2);
-//    pros::lcd::set_text(0, std::to_string(globalPos[2]));
 //
+//    //drive in to opposite platform, run intake, lift arm high enough and removes paths
 //    profileControllerm->setTarget("B");
 //    liftcontroller->setTarget(3500);
+//    intakecontroller->setTarget(10000);
 //    liftcontroller->waitUntilSettled();
 //    profileControllerm->waitUntilSettled();
 //    profileControllers->removePath("Z");
 //    profileController->removePath("Y");
 //
-//    liftcontroller->setTarget(2400);
+//    //lower arm and open jaw to release
+//    liftcontroller->setTarget(2300);
 //    liftcontroller->waitUntilSettled();
 //    jawcontroller->setTarget(-20);
-////    jawcontroller->waitUntilSettled();
 //
+//    //back up a little to synchronise arm up then back up again to synchronise arm down move forwards again to move rings
 //    profileController->generatePath({{0_in, 0_in, 0_deg}, {7_in, 0_in, 0_deg}}, "C");
-////    profileController->generatePath({{0_in, 0_in, 0_deg}, {20_in, 0_in, 0_deg}}, "Z");
 //    profileController->generatePath({{0_in, 0_in, 0_deg}, {22_in, 0_in, 0_deg}}, "Y");
-//    profileController->generatePath({{0_in, 0_in, 0_deg}, {19_in, -18_in, 90_deg}}, "D");
 //    profileController->setTarget("C", true);
+//    liftcontroller->setTarget(2800);
 //    profileController->waitUntilSettled();
 //    profileController->setTarget("C", true);
-//    liftcontroller->setTarget(600);
+//    liftcontroller->setTarget(1000);
 //    profileController->waitUntilSettled();
 //    profileController->setTarget("C");
 //    profileController->waitUntilSettled();
-////    liftcontroller->waitUntilSettled();
-//    PIDTurnAbs(-p);
+//
+//    //make 90 turn and move to intake rings and 90 again and to move to yellow goal
+//    PIDTurnAbs(-p, 2);
+//    PIDTurnAbs(-p, 2);
 //    pros::lcd::set_text(0, std::to_string(globalPos[2]));
-////    tipcontroller->setTarget(3100);
-////    tipcontroller->waitUntilSettled();
-//    double moveX = globalPos[0] + 94.58;
-//    double moveY = 58.8 - globalPos[1];
-//    profileController->generatePath({{0_in, 0_in, 0_deg}, {20_in, 15_in, 0_deg}}, "Z");
+////    PIDMove(90, -p, 1);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {29_in, 0_in, 0_deg}}, "Z");
 //    profileController->setTarget("Z");
-//    intakecontroller->setTarget(10000);
+//    intakecontroller->setTarget(0);
 //    profileController->waitUntilSettled();
-//    PIDTurnAbs(-(3*p)/2);
-//    tipcontroller->setTarget(3100);
+//    profileController->setTarget("C", true);
+//    profileController->waitUntilSettled();
+//    PIDTurnAbs(-(3*p)/2, 2);
+//    PIDTurnAbs(-(3*p)/2, 2);
+//    tipcontroller->setTarget(2850);
 //    tipcontroller->waitUntilSettled();
 //    profileController->setTarget("Y");
 //    liftcontroller->setTarget(50);
 //    profileController->waitUntilSettled();
 //
-////    tipcontroller->setTarget(3100);
-////    tipcontroller->waitUntilSettled();
-////    profileController->setTarget("D");
-////    liftcontroller->setTarget(50);
-////    profileController->waitUntilSettled();
-////
-////    profileController->removePath("C");
-////    profileController->removePath("D");
-////    profileController->generatePath({{0_in, 0_in, 0_deg}, {10_in, -22_in, 90_deg}}, "E");
-////    profileController->generatePath({{0_in, 0_in, 0_deg}, {18_in, 22_in, 0_deg}}, "F");
-////
 //    jawcontroller->setTarget(-260);
 //    jawcontroller->waitUntilSettled();
-//    liftcontroller->setTarget(500);
+//    liftcontroller->setTarget(1000);
 //    liftcontroller->waitUntilSettled();
-////
-////    PIDTurnAbs(-(3*p)/2);
-////    PIDTurnAbs(p/2);
-////    profileController->setTarget("E", true);
-////    profileController->waitUntilSettled();
-////    tipcontroller->setTarget(2000);
-////    tipcontroller->waitUntilSettled();
-////    profileController->setTarget("E");
+//    profileControllers->removePath("Z");
+//    profileController->removePath("Y");
+//
+//    profileControllerm->generatePath({{0_in, 0_in, 0_deg}, {26_in, -27_in, 0_deg}}, "D");
+//    profileControllerm->setTarget("D");
+//    liftcontroller->setTarget(3500);
+//    intakecontroller->setTarget(10000);
+//    liftcontroller->waitUntilSettled();
+//    profileControllerm->waitUntilSettled();
+//    liftcontroller->setTarget(2600);
+//    liftcontroller->waitUntilSettled();
+//    jawcontroller->setTarget(-20);
+//
+//    moveArc(1.1, 32, 10, false, true, 127);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {25_in, 0_in, 0_deg}}, "X");
+//    PIDTurnAbs(-7, 1);
+//    profileController->setTarget("X", true);
+//    profileController->waitUntilSettled();
+//    tipcontroller->setTarget(2000);
+//
+//    profileControllerm->generatePath({{0_in, 0_in, 0_deg}, {45_in, 8_in, 0_deg}}, "L");
+//    liftcontroller->setTarget(100);
+//    profileControllerm->setTarget("L");
+//    profileControllerm->waitUntilSettled();
+//    jawcontroller->setTarget(-260);
+//    jawcontroller->waitUntilSettled();
+//    liftcontroller->setTarget(1000);
+//    liftcontroller->waitUntilSettled();
+//
+//    PIDTurnAbs(-7.81, 2);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {35_in, 0_in, 0_deg}}, "O");
+//    profileController->setTarget("O");
+//    liftcontroller->setTarget(2600);
+//    profileController->waitUntilSettled();
+//    liftcontroller->waitUntilSettled();
+//    jawcontroller->setTarget(-20);
+//
+//    profileController->setTarget("C", true);
+//    profileController->waitUntilSettled();
+//    PIDTurnAbs(-9.39, 1);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {25_in, 0_in, 0_deg}}, "M");
+//    profileController->setTarget("M");
+//    tipcontroller->setTarget(3000);
+//    liftcontroller->setTarget(100);
+//    profileController->waitUntilSettled();
+//    jawcontroller->setTarget(-260);
+//    tipcontroller->setTarget(100);
+//    jawcontroller->waitUntilSettled();
+//    liftcontroller->setTarget(3400);
+//    liftcontroller->waitUntilSettled();
+//    PIDTurnAbs(-6.4, 1);
+//    profileController->generatePath({{0_in, 0_in, 0_deg}, {10_in, 0_in, 0_deg}}, "N");
+//    profileController->setTarget("N");
+//    liftcontroller->setTarget(2600);
+//    profileController->waitUntilSettled();
+//    liftcontroller->waitUntilSettled();
+//    jawcontroller->setTarget(-20);
+//    jawcontroller->waitUntilSettled();
+//
+////    profileController->generatePath({{0_in, 0_in, 0_deg}, {50_in, 20_in, -90_deg}}, "X");
+////    profileController->setTarget("X", true);
+////    liftcontroller->setTarget(2800);
 }
 
 void LRT(){
