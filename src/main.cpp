@@ -5,16 +5,17 @@
 // pros::Motor BLeft(16, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 // pros::Motor BRight(14, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 
-pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor FRight(15, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor BLeft(19, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor BRight(11, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor FLeft(4, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor FRight(3, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor BLeft(5, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor BRight(12, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 
-pros::Motor Lift(18, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor Claw(12, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor Fork(10, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Intake(11, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Lift(6, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Claw(2, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Fork(1, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
 
-pros::Imu inertial_sensor(1);
+pros::Imu inertial_sensor(14);
 
 
 pros::Controller Master (pros::E_CONTROLLER_MASTER);
@@ -53,7 +54,7 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 
 	 std::shared_ptr<AsyncPositionController<double, double>> rightsidecontroller =
 			 	AsyncPosControllerBuilder()
-		 		.withMotor({14,10}) // lift motor port 3
+		 		.withMotor({14,19}) // lift motor port 3
 						 		//        .withGains({liftkP, liftkI, liftkD})
 				 		.build();
 
@@ -81,7 +82,7 @@ std::shared_ptr<AsyncPositionController<double, double>> liftcontroller =
 										 .build();
 std::shared_ptr<AsyncPositionController<double, double>> forkcontroller =
 									AsyncPosControllerBuilder()
-										.withMotor(17) // lift motor port 3
+										.withMotor(1) // lift motor port 3
 																 //        .withGains({liftkP, liftkI, liftkD})
 										.build();
 /**
@@ -100,6 +101,34 @@ void on_center_button() {
 	}
 }
 
+void inertial_turn(int degrees) {
+	inertial_sensor.reset();
+	if (degrees > 0) {
+		while (inertial_sensor.get_heading() < 90) {
+			FLeft.set_voltage_limit(-100);
+			BLeft.set_voltage_limit(-100);
+			FRight.set_voltage_limit(100);
+			FRight.set_voltage_limit(100);
+		}
+	}
+	else {
+	while (inertial_sensor.get_heading() < 90) {
+		FLeft.set_voltage_limit(100);
+		BLeft.set_voltage_limit(100);
+		FRight.set_voltage_limit(-100);
+		FRight.set_voltage_limit(-100);
+	}
+	}
+		FLeft.set_voltage_limit(0);
+		BLeft.set_voltage_limit(0);
+		FRight.set_voltage_limit(0);
+		FRight.set_voltage_limit(0);
+}
+
+
+
+
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -111,7 +140,7 @@ void initialize() {
 	pros::lcd::set_text(1, "I'm hungry!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
-	autonomous();
+	//autonomous();
 
 	// pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 	// pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
@@ -161,152 +190,158 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+inertial_turn(90);
+
+
+
+
+//autos start
 	//drive backwards and drop 3 rings and then pick up goal
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
-	profileController->setTarget("A", "true");
-	profileController->waitUntilSettled();
-	forkcontroller->setTarget(500);
-	forkcontroller->waitUntilSettled();
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {5_in, 0_in, 0_deg}}, "A");
-	pros::delay(250);
-	forkcontroller->setTarget(1850);
-	profileController->setTarget("A");
-	forkcontroller->waitUntilSettled();
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {6_in, 0_in, 0_deg}}, "A");
-	profileController->setTarget("A", "true");
-	forkcontroller->setTarget(1000);
-	forkcontroller->waitUntilSettled();
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
+// 	profileController->setTarget("A", "true");
+// 	profileController->waitUntilSettled();
+// 	forkcontroller->setTarget(500);
+// 	forkcontroller->waitUntilSettled();
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {5_in, 0_in, 0_deg}}, "A");
+// 	pros::delay(250);
+// 	forkcontroller->setTarget(1850);
+// 	profileController->setTarget("A");
+// 	forkcontroller->waitUntilSettled();
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {6_in, 0_in, 0_deg}}, "A");
+// 	profileController->setTarget("A", "true");
+// 	forkcontroller->setTarget(1000);
+// 	forkcontroller->waitUntilSettled();
+//
+// //turn to face neutral goal
+// 	leftsidecontroller->setTarget(FLeft.get_position()+1000);
+// 	rightsidecontroller->setTarget(FRight.get_position() + 200);
+// 	leftsidecontroller->waitUntilSettled();
+//
+// //pickup and stack first neutral goal
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
+// 	profileController->setTarget("A");
+// 	profileController->waitUntilSettled();
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, -24_in, 30_deg}}, "B");
+// 	jawcontroller->setTarget(-350);
+// 	jawcontroller->waitUntilSettled();
+// 	profileController->setTarget("B");
+// 	liftcontroller->setTarget(3500);
+// 	liftcontroller->waitUntilSettled();
+// 	profileController->waitUntilSettled();
+// 	liftcontroller->setTarget(2600);
+// 	liftcontroller->waitUntilSettled();
+// 	jawcontroller->setTarget(-20);
+//
+// //drive back, 180, drop alliance gaol and push large neutral into red zone
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {6_in, 0_in, 0_deg}}, "A");
+// 	profileController->setTarget("A", "true");
+// 	profileController->waitUntilSettled();
+// 	leftsidecontroller->setTarget(FLeft.get_position() - 800);
+// 	rightsidecontroller->setTarget(FRight.get_position() + 800);
+// 	leftsidecontroller->waitUntilSettled();
+// 	rightsidecontroller->waitUntilSettled();
+// 	forkcontroller->setTarget(1850);
+// 	forkcontroller->waitUntilSettled();
+//
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {45_in, 0_in, 0_deg}}, "A");
+// 	profileController->setTarget("A", "true");
+// 	pros::delay(300);
+// 	forkcontroller->setTarget(10);
+// 	profileController->waitUntilSettled();
+//
+// //90 turn to drive back and fork second alliance gaol
+// leftsidecontroller->setTarget(FLeft.get_position() - 400);
+// rightsidecontroller->setTarget(FRight.get_position() + 400);
+// leftsidecontroller->waitUntilSettled();
+// rightsidecontroller->waitUntilSettled();
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A", "true");
+// forkcontroller->setTarget(1850);
+// profileController->waitUntilSettled();
+// forkcontroller->setTarget(1000);
+//
+// //90 turn to face 3rd neutral goal
+// leftsidecontroller->setTarget(FLeft.get_position() - 800);
+// rightsidecontroller->setTarget(FRight.get_position() + 300);
+// leftsidecontroller->waitUntilSettled();
+// rightsidecontroller->waitUntilSettled();
+//
+// //stack 3rd neutral goal
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, -22_in, 30_deg}}, "B");
+// jawcontroller->setTarget(-350);
+// jawcontroller->waitUntilSettled();
+// profileController->setTarget("B");
+// liftcontroller->setTarget(3500);
+// liftcontroller->waitUntilSettled();
+// profileController->waitUntilSettled();
+// liftcontroller->setTarget(2600);
+// liftcontroller->waitUntilSettled();
+// jawcontroller->setTarget(-20);
+//
+// //turn 90, drop alliance, stack other alliance
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A", "true");
+// profileController->waitUntilSettled();
+// leftsidecontroller->setTarget(FLeft.get_position() - 400);
+// rightsidecontroller->setTarget(FRight.get_position() + 400);
+// leftsidecontroller->waitUntilSettled();
+// rightsidecontroller->waitUntilSettled();
+// forkcontroller->setTarget(1850);
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
+// jawcontroller->setTarget(-800);
+// liftcontroller->setTarget(3500);
+// liftcontroller->waitUntilSettled();
+// leftsidecontroller->setTarget(FLeft.get_position() + 400);
+// rightsidecontroller->setTarget(FRight.get_position() - 400);
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
+// liftcontroller->setTarget(2600);
+// liftcontroller->waitUntilSettled();
+// jawcontroller->setTarget(-20);
+// pros::delay(100);
+//
+// //turn 90 grab red alliance turn 90 and drive to position to climb on red
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A", "true");
+// profileController->waitUntilSettled();
+// leftsidecontroller->setTarget(FLeft.get_position() + 400);
+// rightsidecontroller->setTarget(FRight.get_position() - 400);
+// liftcontroller->setTarget(10);
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {32_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
+// jawcontroller->setTarget(-800);
+// leftsidecontroller->setTarget(FLeft.get_position() - 400);
+// rightsidecontroller->setTarget(FRight.get_position() + 400);
+// leftsidecontroller->waitUntilSettled();
+// rightsidecontroller->waitUntilSettled();
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
+// leftsidecontroller->setTarget(FLeft.get_position() - 400);
+// rightsidecontroller->setTarget(FRight.get_position() + 400);
+// leftsidecontroller->waitUntilSettled();
+// rightsidecontroller->waitUntilSettled();
+//
+// //climb red platform with 1 alliance in claw
+// liftcontroller->setTarget(2500);
+// pros::delay(250);
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
+// liftcontroller->setTarget(10);
+// liftcontroller->waitUntilSettled();
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
+// profileController->setTarget("A");
+// profileController->waitUntilSettled();
 
-//turn to face neutral goal
-	leftsidecontroller->setTarget(FLeft.get_position()+1000);
-	rightsidecontroller->setTarget(FRight.get_position() + 200);
-	leftsidecontroller->waitUntilSettled();
-
-//pickup and stack first neutral goal
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
-	profileController->setTarget("A");
-	profileController->waitUntilSettled();
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, -24_in, 30_deg}}, "B");
-	jawcontroller->setTarget(-350);
-	jawcontroller->waitUntilSettled();
-	profileController->setTarget("B");
-	liftcontroller->setTarget(3500);
-	liftcontroller->waitUntilSettled();
-	profileController->waitUntilSettled();
-	liftcontroller->setTarget(2600);
-	liftcontroller->waitUntilSettled();
-	jawcontroller->setTarget(-20);
-
-//drive back, 180, drop alliance gaol and push large neutral into red zone
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {6_in, 0_in, 0_deg}}, "A");
-	profileController->setTarget("A", "true");
-	profileController->waitUntilSettled();
-	leftsidecontroller->setTarget(FLeft.get_position() - 800);
-	rightsidecontroller->setTarget(FRight.get_position() + 800);
-	leftsidecontroller->waitUntilSettled();
-	rightsidecontroller->waitUntilSettled();
-	forkcontroller->setTarget(1850);
-	forkcontroller->waitUntilSettled();
-
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {45_in, 0_in, 0_deg}}, "A");
-	profileController->setTarget("A", "true");
-	pros::delay(300);
-	forkcontroller->setTarget(10);
-	profileController->waitUntilSettled();
-
-//90 turn to drive back and fork second alliance gaol
-leftsidecontroller->setTarget(FLeft.get_position() - 400);
-rightsidecontroller->setTarget(FRight.get_position() + 400);
-leftsidecontroller->waitUntilSettled();
-rightsidecontroller->waitUntilSettled();
-profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A", "true");
-forkcontroller->setTarget(1850);
-profileController->waitUntilSettled();
-forkcontroller->setTarget(1000);
-
-//90 turn to face 3rd neutral goal
-leftsidecontroller->setTarget(FLeft.get_position() - 800);
-rightsidecontroller->setTarget(FRight.get_position() + 300);
-leftsidecontroller->waitUntilSettled();
-rightsidecontroller->waitUntilSettled();
-
-//stack 3rd neutral goal
-profileController->generatePath({{0_in, 0_in, 0_deg}, {36_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, -22_in, 30_deg}}, "B");
-jawcontroller->setTarget(-350);
-jawcontroller->waitUntilSettled();
-profileController->setTarget("B");
-liftcontroller->setTarget(3500);
-liftcontroller->waitUntilSettled();
-profileController->waitUntilSettled();
-liftcontroller->setTarget(2600);
-liftcontroller->waitUntilSettled();
-jawcontroller->setTarget(-20);
-
-//turn 90, drop alliance, stack other alliance
-profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A", "true");
-profileController->waitUntilSettled();
-leftsidecontroller->setTarget(FLeft.get_position() - 400);
-rightsidecontroller->setTarget(FRight.get_position() + 400);
-leftsidecontroller->waitUntilSettled();
-rightsidecontroller->waitUntilSettled();
-forkcontroller->setTarget(1850);
-profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-jawcontroller->setTarget(-800);
-liftcontroller->setTarget(3500);
-liftcontroller->waitUntilSettled();
-leftsidecontroller->setTarget(FLeft.get_position() + 400);
-rightsidecontroller->setTarget(FRight.get_position() - 400);
-profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-liftcontroller->setTarget(2600);
-liftcontroller->waitUntilSettled();
-jawcontroller->setTarget(-20);
-pros::delay(100);
-
-//turn 90 grab red alliance turn 90 and drive to position to climb on red
-profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A", "true");
-profileController->waitUntilSettled();
-leftsidecontroller->setTarget(FLeft.get_position() + 400);
-rightsidecontroller->setTarget(FRight.get_position() - 400);
-liftcontroller->setTarget(10);
-profileController->generatePath({{0_in, 0_in, 0_deg}, {32_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-jawcontroller->setTarget(-800);
-leftsidecontroller->setTarget(FLeft.get_position() - 400);
-rightsidecontroller->setTarget(FRight.get_position() + 400);
-leftsidecontroller->waitUntilSettled();
-rightsidecontroller->waitUntilSettled();
-profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-leftsidecontroller->setTarget(FLeft.get_position() - 400);
-rightsidecontroller->setTarget(FRight.get_position() + 400);
-leftsidecontroller->waitUntilSettled();
-rightsidecontroller->waitUntilSettled();
-
-//climb red platform with 1 alliance in claw
-liftcontroller->setTarget(2500);
-pros::delay(250);
-profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-liftcontroller->setTarget(10);
-liftcontroller->waitUntilSettled();
-profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
-profileController->setTarget("A");
-profileController->waitUntilSettled();
-
-
+//autos end
 
 	// profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
 	// profileController->setTarget("A");
@@ -435,13 +470,14 @@ void opcontrol() {
 	Lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	Claw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	Fork.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	Intake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
 	double armPwr = 0;
 	double ClawOpen = 0;
 	double ClawClose = 0;
 	double ForkOpen = 0;
 	double ForkClose = 0;
-
+	bool Intake01 = true;
 
 	double Pwr = 0;
 	double Trn = 0;
@@ -547,24 +583,40 @@ void opcontrol() {
 
 		if (Master.get_digital(DIGITAL_L2)){
 			//Fork.move_absolute(double (1850), 127);
-			forkcontroller->setTarget(1850);
+			forkcontroller->setTarget(1755);
 
 
 		} else if (Master.get_digital(DIGITAL_L1)){
 			//Fork.move_absolute(double (1000), 127);
-			forkcontroller->setTarget(1050);
+			forkcontroller->setTarget(1300);
 
 
 		}
 		else if (Master.get_digital(DIGITAL_UP)){
 			//Fork.move_absolute(double (10), 127);
-			forkcontroller->setTarget(10);
+			forkcontroller->setTarget(15);
 
 		}
 
 		if (Master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) < 0){
 			armPwr = -armPwr;
 		}
+
+		if (Master.get_digital(DIGITAL_A)) {
+			if (Intake01 = true) {
+				Intake01 = false;
+			}
+			else {
+				Intake01 = true;
+			}
+}
+
+	if (Lift.get_position() >= 500 && Intake01) {
+			Intake.move_velocity(85);
+		}
+	else {
+		Intake.move_velocity(0);
+	}
 
 		leftPower = Pwr - 0.6*Trn;
 		rightPower = Pwr + 0.6*Trn;
