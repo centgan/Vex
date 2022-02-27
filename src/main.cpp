@@ -15,7 +15,7 @@ pros::Motor Lift(6, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNT
 pros::Motor Claw(2, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor Fork(1, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
 
-pros::Imu inertial_sensor(14);
+pros::Imu inertial_sensor(10);
 
 
 pros::Controller Master (pros::E_CONTROLLER_MASTER);
@@ -25,7 +25,7 @@ pros::Controller Master (pros::E_CONTROLLER_MASTER);
 
 std::shared_ptr<ChassisController> chassis =
 		ChassisControllerBuilder()
-		 .withMotors({19,11}, {16,20}) // left motor is 1, right motor is 2 (reversed)
+		 .withMotors({4,5}, {3,12}) // left motor is 1, right motor is 2 (reversed)
 		 .withGains(
 						{0.0008, 0.0004, 0.00005}, // distance controller gains 0.00001
 						{0.0008, 0, 0.00001}, // turn controller gains
@@ -54,7 +54,7 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 
 	 std::shared_ptr<AsyncPositionController<double, double>> rightsidecontroller =
 			 	AsyncPosControllerBuilder()
-		 		.withMotor({14,19}) // lift motor port 3
+		 		.withMotor({3,11}) // lift motor port 3
 						 		//        .withGains({liftkP, liftkI, liftkD})
 				 		.build();
 
@@ -65,19 +65,19 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 								// 	0.5,
 								// 	2.5
 																	//})
-				 		 		.withMotor({20,16}) // lift motor port 3
+				 		 		.withMotor({4,5}) // lift motor port 3
 				 						 		//        .withGains({liftkP, liftkI, liftkD})
 				 				 		.build();
 
 std::shared_ptr<AsyncPositionController<double, double>> jawcontroller =
 	AsyncPosControllerBuilder()
-		.withMotor(15) // lift motor port 3
+		.withMotor(2) // lift motor port 3
 		//        .withGains({liftkP, liftkI, liftkD})
 		.build();
 
 std::shared_ptr<AsyncPositionController<double, double>> liftcontroller =
 								 AsyncPosControllerBuilder()
-										 .withMotor(18) // lift motor port 3
+										 .withMotor(6) // lift motor port 3
 						 //        .withGains({liftkP, liftkI, liftkD})
 										 .build();
 std::shared_ptr<AsyncPositionController<double, double>> forkcontroller =
@@ -104,19 +104,19 @@ void on_center_button() {
 void inertial_turn(int degrees) {
 	inertial_sensor.reset();
 	if (degrees > 0) {
-		while (inertial_sensor.get_heading() < 90) {
-			FLeft.set_voltage_limit(-100);
-			BLeft.set_voltage_limit(-100);
-			FRight.set_voltage_limit(100);
-			FRight.set_voltage_limit(100);
+		while (abs(inertial_sensor.get_heading()) < abs(degrees-2)) {
+			FLeft.set_voltage_limit(-80);
+			BLeft.set_voltage_limit(-80);
+			FRight.set_voltage_limit(80);
+			FRight.set_voltage_limit(80);
 		}
 	}
 	else {
-	while (inertial_sensor.get_heading() < 90) {
-		FLeft.set_voltage_limit(100);
-		BLeft.set_voltage_limit(100);
-		FRight.set_voltage_limit(-100);
-		FRight.set_voltage_limit(-100);
+	while (abs(inertial_sensor.get_heading()) < abs(degrees-2)) {
+		FLeft.set_voltage_limit(80);
+		BLeft.set_voltage_limit(80);
+		FRight.set_voltage_limit(-80);
+		FRight.set_voltage_limit(-80);
 	}
 	}
 		FLeft.set_voltage_limit(0);
@@ -342,6 +342,7 @@ inertial_turn(90);
 // profileController->waitUntilSettled();
 
 //autos end
+
 
 	// profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
 	// profileController->setTarget("A");
