@@ -104,7 +104,7 @@ void on_center_button() {
 void inertial_turn(int degrees) {
 	inertial_sensor.reset();
 	if (degrees > 0) {
-		while (abs(inertial_sensor.get_heading()) < abs(degrees-2)) {
+		while (abs(inertial_sensor.get_heading()) < abs(degrees*0.98)) {
 			FLeft.set_voltage_limit(-80);
 			BLeft.set_voltage_limit(-80);
 			FRight.set_voltage_limit(80);
@@ -112,7 +112,7 @@ void inertial_turn(int degrees) {
 		}
 	}
 	else {
-	while (abs(inertial_sensor.get_heading()) < abs(degrees-2)) {
+	while (abs(inertial_sensor.get_heading()) < abs(degrees*0.98)) {
 		FLeft.set_voltage_limit(80);
 		BLeft.set_voltage_limit(80);
 		FRight.set_voltage_limit(-80);
