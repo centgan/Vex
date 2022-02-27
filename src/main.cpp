@@ -14,6 +14,8 @@
  * to keep execution time for this mode under a few seconds.
  */
 
+pros::Motor FLeft(4, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor FRight(-3, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Imu inertial_sensor (10);
 std::shared_ptr<ChassisController> chassis =
 		 ChassisControllerBuilder()
@@ -60,6 +62,16 @@ std::shared_ptr<AsyncPositionController<double, double>> backintakecontroller =
 										                      .withMotor(1) // lift motor port 3
 										              //        .withGains({liftkP, liftkI, liftkD})
 										                      .build();
+std::shared_ptr<AsyncPositionController<double, double>> rightsidecontroller =
+							AsyncPosControllerBuilder()
+					.withMotor({-3,-12}) // lift motor port 3
+					.build();
+
+std::shared_ptr<AsyncPositionController<double, double>> leftsidecontroller =
+															                 AsyncPosControllerBuilder()
+															                      .withMotor({4,5}) // lift motor port 3
+															              //        .withGains({liftkP, liftkI, liftkD})
+															                      .build();
 // void inertial_turn(int degrees) {
 // inertial_sensor.reset();
 // if (degrees > 0) {
@@ -125,16 +137,19 @@ profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "A"
 profileController->setTarget("A");
 jawcontroller->setTarget(-400);
 profileController->waitUntilSettled();
-jawcontroller->setTarget(-450);
+jawcontroller->setTarget(-500);
 profileController->generatePath({{0_in, 0_in, 0_deg},{-30_in, 0_in, 0_deg}}, "B");
 profileController->setTarget("B", true);
 profileController->waitUntilSettled();
-backintakecontroller->setTarget(600);
-profileController->generatePath({{0_in, 0_in, 0_deg}, {3_in, 3_in, 160_deg}}, "C");
-profileController->setTarget("C", true);
-profileController->generatePath({{0_in, 0_in, 0_deg}, {-10_in, 0_in, 0_deg}}, "D");
-profileController->waitUntilSettled();
-profileController->setTarget("D", true);
+backintakecontroller->setTarget(2000);
+backintakecontroller->waitUntilSettled();
+leftsidecontroller->setTarget(FLeft.get_position()-2000);
+rightsidecontroller->setTarget(FRight.get_position()+2000);
+leftsidecontroller->waitUntilSettled();
+
+// profileController->generatePath({{0_in, 0_in, 0_deg}, {-10_in, 0_in, 0_deg}}, "D");
+// profileController->waitUntilSettled();
+// profileController->setTarget("D", true);
 pros::delay(1000);
 
 
