@@ -143,6 +143,7 @@ profileController->setTarget("B", true);
 profileController->waitUntilSettled();
 backintakecontroller->setTarget(1900);
 backintakecontroller->waitUntilSettled();
+liftcontroller->setTarget(200);
 leftsidecontroller->setTarget(FLeft.get_position()-1000);
 rightsidecontroller->setTarget(FRight.get_position()+1000);
 leftsidecontroller->waitUntilSettled();
