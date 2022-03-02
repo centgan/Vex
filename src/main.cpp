@@ -103,9 +103,9 @@ void on_center_button() {
 
 void inertial_turn(int degrees) {
 	double x = inertial_sensor.get_heading();
-	double error = 0.65;
-	if (abs(degrees) >= 180) {
-		error = 0.83;
+	double error = 0.769;
+	if (abs(degrees)>= 180) {
+		error = 0.905;
 	}
 
 	if (degrees > 0) {
@@ -113,10 +113,10 @@ void inertial_turn(int degrees) {
 			double abc = inertial_sensor.get_heading();
 			pros::lcd::set_text(3, std::to_string(abc));
 			pros::lcd::set_text(4,"1st one");
-			FLeft.move(80);
-			BLeft.move(80);
-			FRight.move(-80);
-			BRight.move(-80);
+			FLeft.move(60);
+			BLeft.move(60);
+			FRight.move(-60);
+			BRight.move(-60);
 			pros::delay(10);
 			}
 			FLeft.move(0);
@@ -125,45 +125,24 @@ void inertial_turn(int degrees) {
 			BRight.move(0);
 		}
 
-		// while (abs(inertial_sensor.get_heading()) < abs(degrees*0.75)) {
-		// 	FLeft.move(-80);
-		// 	BLeft.move(-80);
-		// 	FRight.move(80);
-		// 	BRight.move(80);
-		// }
-
 	else {
-		// double y = x - degrees*error;
-		// if (x  < degrees*error) {
-		// 	double y = 360 - abs(x - degrees*error);
-
 		double y = 360 - abs(degrees*error);
 		inertial_sensor.set_heading(359);
 		while (inertial_sensor.get_heading() > (y)) {
 			double abc = inertial_sensor.get_heading();
 			pros::lcd::set_text(3, std::to_string(abc));
 			pros::lcd::set_text(5,"2nd one");
-			FLeft.move(-80);
-			BLeft.move(-80);
-			FRight.move(80);
-			BRight.move(80);
+			FLeft.move(-60);
+			BLeft.move(-60);
+			FRight.move(60);
+			BRight.move(60);
 			pros::delay(10);
 			}
 			FLeft.move(0);
 			BLeft.move(0);
 			FRight.move(0);
 			BRight.move(0);
-	// while (abs(inertial_sensor.get_heading()) < abs(degrees*0.75)) {
-	// 	FLeft.move(80);
-	// 	BLeft.move(80);
-	// 	FRight.move(-80);
-	// 	BRight.move(-80);
-	// }
 	}
-		// FLeft.move(0);
-		// BLeft.move(0);
-		// FRight.move(0);
-		// BRight.move(0);
 }
 
 
@@ -181,8 +160,8 @@ void initialize() {
 	pros::lcd::set_text(1, "I'm hungry!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
-	pros::delay(5000);
-	autonomous();
+	pros::delay(1000);
+	//autonomous();
 
 	// pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 	// pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
@@ -240,10 +219,10 @@ void autonomous() {
 	jawcontroller->setTarget(-300);
 	pros::delay(100);
 	liftcontroller->setTarget(150);
-	forkcontroller->setTarget(1830);
+	forkcontroller->setTarget(1900);
 	inertial_turn(-150);
 	forkcontroller->waitUntilSettled();
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {25_in, 0_in, 0_deg}}, "B");
+	profileController->generatePath({{0_in, 0_in, 0_deg}, {22_in, 0_in, 0_deg}}, "B");
 	profileController->setTarget("B", "true");
 
 
@@ -654,10 +633,10 @@ void opcontrol() {
 
 
 			if (Master.get_digital(DIGITAL_R1)) {
-				Claw.move_velocity(75);
+				Claw.move_velocity(85);
 				}
 			else if (Master.get_digital(DIGITAL_R2)) {
-				Claw.move_velocity(-75);
+				Claw.move_velocity(-85);
 			}
 			else {
 			Claw.move_velocity(0);
@@ -665,7 +644,7 @@ void opcontrol() {
 
 		if (Master.get_digital(DIGITAL_L2)){
 			//Fork.move_absolute(double (1850), 127);
-			forkcontroller->setTarget(1830);
+			forkcontroller->setTarget(1890);
 
 
 		} else if (Master.get_digital(DIGITAL_L1)){
@@ -676,7 +655,7 @@ void opcontrol() {
 		}
 		else if (Master.get_digital(DIGITAL_UP)){
 			//Fork.move_absolute(double (10), 127);
-			forkcontroller->setTarget(15);
+			forkcontroller->setTarget(5);
 
 		}
 
@@ -694,7 +673,7 @@ void opcontrol() {
 }
 
 	if (Lift.get_position() >= 500 && Intake01) {
-			Intake.move_velocity(-95);
+			Intake.move_velocity(-1000);
 		}
 	else {
 		Intake.move_velocity(0);
