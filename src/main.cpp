@@ -4,8 +4,8 @@
 // pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 // pros::Motor BLeft(16, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 // pros::Motor BRight(14, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::ADIEncoder encoder_right(3, 4, true);
-pros::ADIEncoder encoder_left(7,8);
+pros::ADIEncoder encoder_right(3,4, true);
+pros::ADIEncoder encoder_left(7,8, false);
 pros::Motor FLeft(4, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor FRight(3, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor BLeft(8, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
@@ -120,7 +120,24 @@ void inertial_turn(int degrees) {
 		FRight.set_voltage_limit(0);
 }
 
-
+void DriveStraight(int distance) {
+	if (distance > 0) {
+		while (encoder_left.get_value() < distance && encoder_right.get_value() < distance) {
+			FLeft.move(50);
+			BLeft.move(50);
+			FRight.move(50);
+			FRight.move(50);
+		}
+	}
+	else {
+		while (encoder_left.get_value() > distance && encoder_right.get_value() > distance) {
+			FLeft.move(-50);
+			BLeft.move(-50);
+			FRight.move(-50);
+			FRight.move(-50);
+		}
+	}
+}
 
 
 
@@ -136,7 +153,7 @@ void initialize() {
 
 	pros::lcd::register_btn1_cb(on_center_button);
 
-	// autonomous();
+	autonomous();
 
 	// pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 	// pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
@@ -186,14 +203,17 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+
+DriveStraight(1080);
+
 //inertial_turn(90);
 // set the state to zero
-chassis->setState({0_in, 0_in, 0_deg});
-// // turn 45 degrees and drive approximately 1.4 ft
-chassis->driveToPoint({4_ft, 0_ft});
-while (true) {
-		pros::lcd::set_text(0, std::to_string(encoder_right.get_value()));
-}
+// chassis->setState({0_in, 0_in, 0_deg});
+// // // turn 45 degrees and drive approximately 1.4 ft
+// chassis->driveToPoint({4_ft, 0_ft});
+// while (true) {
+// 		pros::lcd::set_text(0, std::to_string(encoder_right.get_value()));
+// }
 // turn approximately 45 degrees to end up at 90 degrees
 
 
