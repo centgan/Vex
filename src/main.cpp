@@ -7,7 +7,7 @@
 
 pros::Motor FLeft(4, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor FRight(3, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor BLeft(5, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor BLeft(8, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor BRight(12, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 
 pros::Motor Intake(11, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
@@ -25,7 +25,7 @@ pros::Controller Master (pros::E_CONTROLLER_MASTER);
 
 std::shared_ptr<ChassisController> chassis =
 		ChassisControllerBuilder()
-		 .withMotors({3,12}, {4,5}) // left motor is 1, right motor is 2 (reversed)
+		 .withMotors({3,12}, {4,8}) // left motor is 1, right motor is 2 (reversed)
 		 .withGains(
 						{0.0008, 0.0004, 0.00005}, // distance controller gains 0.00001
 						{0.0008, 0, 0.00001}, // turn controller gains
@@ -66,7 +66,7 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 
 						std::shared_ptr<AsyncPositionController<double, double>> drivesidecontroller =
 				 			 	AsyncPosControllerBuilder()
-				 		 		.withMotor({3,11, 4, 5}) // lift motor port 3
+				 		 		.withMotor({3,11, 4, 8}) // lift motor port 3
 				 						 		//        .withGains({liftkP, liftkI, liftkD})
 				 				 		.build();
 
@@ -180,7 +180,7 @@ void initialize() {
 
 	pros::lcd::register_btn1_cb(on_center_button);
 	pros::delay(5000);
-	autonomous();
+	//autonomous();
 
 	// pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 	// pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
@@ -217,7 +217,7 @@ void disabled() {}
  * starts.
  */
 void competition_initialize() {
-	pros::delay(5000);
+	//pros::delay(5000);
 }
 
 /**
@@ -236,19 +236,53 @@ void autonomous() {
 	// profileController->setTarget("A");
 	// profileController->waitUntilSettled();
 
-	forkcontroller->setTarget(1900);
-	profileController->generatePath({{0_in, 0_in, 0_deg}, {18_in, 0_in, 0_deg}}, "A");
-	profileController->setTarget("A", "true");
-	profileController->waitUntilSettled();
-	forkcontroller->setTarget(1355);
-	liftcontroller->setTarget(500);
-	pros::delay(500);
-	intakecontroller->setTarget(-1000000);
-	drive(40, 40);
-	pros::delay(5000);
+//allaince goal, shove rings in
+	// forkcontroller->setTarget(1900);
+	// profileController->generatePath({{0_in, 0_in, 0_deg}, {18_in, 0_in, 0_deg}}, "A");
+	// profileController->setTarget("A", "true");
+	// profileController->waitUntilSettled();
+	// forkcontroller->setTarget(1400);
+	// liftcontroller->setTarget(500);
+	// pros::delay(500);
+	// intakecontroller->setTarget(-1000001);
+	// drive(40, 40);
+	// pros::delay(5000);
+
+
 	// profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
 	// profileController->setTarget("A");
 	// profileController->waitUntilSettled();
+
+	//right side
+	// profileController->generatePath({{0_in, 0_in, 0_deg}, {39_in, 0_in, 0_deg}}, "A");
+	// profileController->setTarget("A");
+	// profileController->waitUntilSettled();
+
+	//important 1111111!!!
+	drive(1000, 1000);
+	pros::delay(1100);
+	jawcontroller->setTarget(-400);
+	profileController->generatePath({{0_in, 0_in, 0_deg},{-25_in, 0_in, 0_deg}}, "B");
+	profileController->setTarget("B", true);
+	profileController->waitUntilSettled();
+	forkcontroller->setTarget(1900);
+	liftcontroller->setTarget(400);
+	inertial_turn(-95);
+	profileController->generatePath({{0_in, 0_in, 0_deg},{-20_in, 0_in, 0_deg}}, "C");
+	profileController->setTarget("C", true);
+	profileController->waitUntilSettled();
+	liftcontroller->setTarget(-300);
+	forkcontroller->setTarget(1425);
+	intakecontroller->setTarget(-100000);
+	profileController->generatePath({{0_in, 0_in, 0_deg},{10_in, 0_in, 0_deg}}, "D");
+	profileController->setTarget("D");
+	profileController->waitUntilSettled();
+	pros::delay(500);
+	forkcontroller->setTarget(1900);
+	pros::delay(4000);
+
+
+
 
 
 //grab 2 neutrals from left side with claw
@@ -265,7 +299,7 @@ void autonomous() {
 	// profileController->generatePath({{0_in, 0_in, 0_deg}, {4_in, 0_in, 0_deg}}, "B");
 	// profileController->setTarget("B", "true");
 	// profileController->waitUntilSettled();
-	// inertial_turn(-150);
+	// inertial_turn(-168);
 	// profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, 0_in, 0_deg}}, "C");
 	// profileController->setTarget("C");
 	// liftcontroller->setTarget(5);
@@ -273,7 +307,7 @@ void autonomous() {
 	// jawcontroller->setTarget(-400);
 	// pros::delay(200);
 	// inertial_turn(-30);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {35_in, 0_in, 0_deg}}, "D");
+	// profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "D");
 	// profileController->setTarget("D", "true");
 	// forkcontroller->setTarget(0);
 	// profileController->waitUntilSettled();
@@ -712,31 +746,32 @@ void opcontrol() {
 
 
 			if (Master.get_digital(DIGITAL_R1)) {
-				Claw.move_velocity(85);
+				Claw.move_velocity(90);
 				}
 			else if (Master.get_digital(DIGITAL_R2)) {
-				Claw.move_velocity(-85);
+				Claw.move_velocity(-90);
 			}
 			else {
 			Claw.move_velocity(0);
 		}
 
-		if (Master.get_digital(DIGITAL_L2)){
+		if (Master.get_digital(DIGITAL_L1)){
 			//Fork.move_absolute(double (1850), 127);
-			forkcontroller->setTarget(1900);
+			Fork.move_velocity(-1000);
+			//forkcontroller->setTarget(-450);
 
-
-		} else if (Master.get_digital(DIGITAL_L1)){
+		} else if (Master.get_digital(DIGITAL_L2)){
 			//Fork.move_absolute(double (1000), 127);
-			forkcontroller->setTarget(1355);
-
-
+			Fork.move_velocity(1000);
+			//forkcontroller->setTarget(0);
 		}
-		else if (Master.get_digital(DIGITAL_UP)){
-			//Fork.move_absolute(double (10), 127);
-			forkcontroller->setTarget(5);
-
+		else {
+			Fork.move_velocity(0);
 		}
+		// else if (Master.get_digital(DIGITAL_UP)){
+		// 	//Fork.move_absolute(double (10), 127);
+		// 	forkcontroller->setTarget(-1895);
+
 
 		if (Master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) < 0){
 			armPwr = -armPwr;
@@ -751,7 +786,7 @@ void opcontrol() {
 			}
 }
 
-	if (Lift.get_position() >= 500 && Intake01) {
+	if (Lift.get_position() >= 350 && Intake01) {
 			Intake.move_velocity(-1000);
 		}
 	else {
@@ -767,5 +802,6 @@ void opcontrol() {
 		BRight.move(leftPower);
 		Lift.move(armPwr);
 		pros::delay(20);
+
 	}
 }
