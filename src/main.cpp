@@ -4,7 +4,8 @@
 // pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 // pros::Motor BLeft(16, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 // pros::Motor BRight(14, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-
+pros::ADIEncoder encoder_right(1,2, true);
+pros::ADIEncoder encoder_left(7,8, false);
 pros::Motor FLeft(4, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor FRight(3, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor BLeft(8, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
@@ -12,10 +13,10 @@ pros::Motor BRight(12, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COU
 
 pros::Motor Intake(11, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor Lift(6, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor Claw(7, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Claw(2, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor Fork(1, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
 
-pros::Imu inertial_sensor(10);
+pros::Imu inertial_sensor(14);
 
 
 pros::Controller Master (pros::E_CONTROLLER_MASTER);
@@ -23,24 +24,18 @@ pros::Controller Master (pros::E_CONTROLLER_MASTER);
 // pros::ADIEncoder encoder_left(5, 6, true);
 // pros::ADIEncoder encoder_rear(3, 4, true);
 
-std::shared_ptr<ChassisController> chassis =
-		ChassisControllerBuilder()
-		 .withMotors({3,12}, {4,8}) // left motor is 1, right motor is 2 (reversed)
-		 .withGains(
-						{0.0008, 0.0004, 0.00005}, // distance controller gains 0.00001
-						{0.0008, 0, 0.00001}, // turn controller gains
-						{0.0008, 0.000001, 0.00005}  // angle controller gains (helps drive straight)0.0001
-		)
-		.withSensors(
-						ADIEncoder{'G', 'H'}, // left encoder in ADI ports A & B
-						ADIEncoder{'E', 'F'},  // right encoder in ADI ports C & D (reversed)
-						ADIEncoder{'C', 'D'}  // middle encoder in ADI ports E & F
-		)
-						// green gearset, tracking wheel diameter (2.75 in), track (7 in), and TPR (360)
-						// 1 inch middle encoder distance, and 2.75 inch middle wheel diameter
-		.withDimensions(AbstractMotor::gearset::green, {{2.75_in, 9.5_in, 4_in, 2.75_in}, quadEncoderTPR})
-		.withOdometry() // use the same scales as the chassis (above)
-		.buildOdometry(); // build an odometry chassis
+std::shared_ptr<OdomChassisController> chassis =
+ChassisControllerBuilder()
+	.withMotors({3,12}, {4, 8}) // left motor is 1, right motor is 2 (reversed)
+	// green gearset, 4 inch wheel diameter, 11.5 inch wheel track
+	.withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR})
+	.withMaxVelocity(50)
+	// left encoder in ADI ports A & B, right encoder in ADI ports C & D (reversed)
+	.withSensors(ADIEncoder{'H', 'G'}, ADIEncoder{'D', 'C'})
+	// specify the tracking wheels diameter (2.75 in), track (7 in), and TPR (360)
+	.withOdometry({{2.75_in, 7_in}, quadEncoderTPR}, StateMode::FRAME_TRANSFORMATION)
+	.buildOdometry();
+
 
 std::shared_ptr<AsyncMotionProfileController> profileController =
 					 AsyncMotionProfileControllerBuilder()
@@ -54,21 +49,9 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 
 	 std::shared_ptr<AsyncPositionController<double, double>> rightsidecontroller =
 			 	AsyncPosControllerBuilder()
-		 		.withMotor({3,11}) // lift motor port 3
+		 		.withMotor({14,19}) // lift motor port 3
 						 		//        .withGains({liftkP, liftkI, liftkD})
 				 		.build();
-
-						std::shared_ptr<AsyncPositionController<double, double>> intakecontroller =
-				 			 	AsyncPosControllerBuilder()
-				 		 		.withMotor(11) // lift motor port 3
-				 						 		//        .withGains({liftkP, liftkI, liftkD})
-				 				 		.build();
-
-						std::shared_ptr<AsyncPositionController<double, double>> drivesidecontroller =
-				 			 	AsyncPosControllerBuilder()
-				 		 		.withMotor({3,11, 4, 8}) // lift motor port 3
-				 						 		//        .withGains({liftkP, liftkI, liftkD})
-				 				 		.build();
 
 						std::shared_ptr<AsyncPositionController<double, double>> leftsidecontroller =
 				 			 	AsyncPosControllerBuilder()
@@ -77,19 +60,19 @@ std::shared_ptr<AsyncMotionProfileController> profileController =
 								// 	0.5,
 								// 	2.5
 																	//})
-				 		 		.withMotor({4,5}) // lift motor port 3
+				 		 		.withMotor({20,16}) // lift motor port 3
 				 						 		//        .withGains({liftkP, liftkI, liftkD})
 				 				 		.build();
 
 std::shared_ptr<AsyncPositionController<double, double>> jawcontroller =
 	AsyncPosControllerBuilder()
-		.withMotor(7) // lift motor port 3
+		.withMotor(15) // lift motor port 3
 		//        .withGains({liftkP, liftkI, liftkD})
 		.build();
 
 std::shared_ptr<AsyncPositionController<double, double>> liftcontroller =
 								 AsyncPosControllerBuilder()
-										 .withMotor(6) // lift motor port 3
+										 .withMotor(18) // lift motor port 3
 						 //        .withGains({liftkP, liftkI, liftkD})
 										 .build();
 std::shared_ptr<AsyncPositionController<double, double>> forkcontroller =
@@ -113,58 +96,190 @@ void on_center_button() {
 	}
 }
 
-void drive(int left, int right) {
-	FLeft.move(left);
-	FRight.move(right);
-	BLeft.move(left);
-	BRight.move(right);
+void inertial_turn(int degrees) {
+	inertial_sensor.reset();
+	if (degrees > 0) {
+		while (inertial_sensor.get_heading() < 90) {
+			FLeft.set_voltage_limit(-100);
+			BLeft.set_voltage_limit(-100);
+			FRight.set_voltage_limit(100);
+			FRight.set_voltage_limit(100);
+		}
+	}
+	else {
+	while (inertial_sensor.get_heading() < 90) {
+		FLeft.set_voltage_limit(100);
+		BLeft.set_voltage_limit(100);
+		FRight.set_voltage_limit(-100);
+		FRight.set_voltage_limit(-100);
+	}
+	}
+		FLeft.set_voltage_limit(0);
+		BLeft.set_voltage_limit(0);
+		FRight.set_voltage_limit(0);
+		FRight.set_voltage_limit(0);
 }
 
-void inertial_turn(int degrees) {
-	double x = inertial_sensor.get_heading();
-	double error = 0.769;
-	if (abs(degrees)>= 180) {
-		error = 0.905;
-	}
-
-	if (degrees > 0) {
-		while (inertial_sensor.get_heading() < x + degrees*error) {
-			double abc = inertial_sensor.get_heading();
-			pros::lcd::set_text(3, std::to_string(abc));
-			pros::lcd::set_text(4,"1st one");
-			FLeft.move(60);
-			BLeft.move(60);
-			FRight.move(-60);
-			BRight.move(-60);
-			pros::delay(10);
+void DriveStraight(int distance) {
+	if (distance > 0) {
+		while (encoder_left.get_value() < distance && encoder_right.get_value() < distance) {
+			FLeft.move(100);
+			FRight.move(100);
+			BLeft.move(100);
+			BRight.move(100);
+			if (encoder_left.get_value() >= distance) {
+				FLeft.move(0);
+				BLeft.move(0);
 			}
-			FLeft.move(0);
-			BLeft.move(0);
-			FRight.move(0);
-			BRight.move(0);
+			if (encoder_right.get_value() >= distance) {
+				FRight.move(0);
+				BRight.move(0);
+			}
 		}
 
+	}
 	else {
-		double y = 360 - abs(degrees*error);
-		inertial_sensor.set_heading(359);
-		while (inertial_sensor.get_heading() > (y)) {
-			double abc = inertial_sensor.get_heading();
-			pros::lcd::set_text(3, std::to_string(abc));
-			pros::lcd::set_text(5,"2nd one");
-			FLeft.move(-60);
-			BLeft.move(-60);
-			FRight.move(60);
-			BRight.move(60);
-			pros::delay(10);
-			}
-			FLeft.move(0);
-			BLeft.move(0);
-			FRight.move(0);
-			BRight.move(0);
+		while (encoder_left.get_value() > distance && encoder_right.get_value() > distance) {
+			FLeft.move(-100);
+			FRight.move(-100);
+			BLeft.move(-100);
+			BRight.move(-100);
+		}
 	}
 }
 
-
+// const double p = 2 * acos(0.0);
+// const double circ = (p * 2.75)/360;
+// const double L = 9.25;
+// const double B = 3;
+//
+// //left, right, back, heading encoder values
+// double prePos[3] = {0, 0, 0};
+// double curPos[3] = {0, 0, 0};
+//
+// //x position, y position, heading
+// double globalPos[3] = {0, 0, 0};
+//
+//
+//
+// void Sensors_reset(){
+// 		encoder_left.reset();
+// 		encoder_right.reset();
+// 		encoder_rear.reset();
+// }
+//
+// double * straight(){
+// 		curPos[0] = encoder_left.get_value()*-1;
+// 		curPos[1] = encoder_right.get_value()*-1;
+// 		curPos[2] = encoder_rear.get_value()*-1;
+// 		return curPos;
+// }
+//
+//
+// double * position(){
+// 		curPos[0] = (encoder_left.get_value())*-1;
+// 		curPos[1] = (encoder_right.get_value())*-1;
+// 		curPos[2] = (encoder_rear.get_value())*-1;
+//
+// 		double n1 = curPos[0] - prePos[0];
+// 		double n2 = curPos[1] - prePos[1];
+// 		double n3 = curPos[2] - prePos[2];
+//
+// 		double x = circ * ((n1 + n2)/2);
+// 		double y = circ * (n3 - (B * (n2 - n1)/L));
+// 		double theta = circ * (n2 - n1)/L;
+//
+//
+// 		globalPos[0] += x * cos(globalPos[2] + theta/2) - y * sin(globalPos[2] + theta/2);
+// 		globalPos[1] += x * sin(globalPos[2] + theta/2) + y * cos(globalPos[2] + theta/2);
+// 		globalPos[2] += theta;
+//
+//
+// 		prePos[0] = curPos[0];
+// 		prePos[1] = curPos[1];
+// 		prePos[2] = curPos[2];
+//
+// 		return globalPos;
+// 	}
+//
+//
+//
+// void reset(){
+// 	 FLeft.tare_position();
+// 	 FRight.tare_position();
+// 	 BLeft.tare_position();
+// 	 BRight.tare_position();
+// }
+// void setDrive(int left, int right){
+// 	 FLeft.move(left);
+// 	 FRight.move(right);
+// 	 BLeft.move(left);
+// 	 BRight.move(right);
+// }
+//
+// double P, tP, turnP;
+// double tD, tI, D, I, turnD, turnI, preTheta, preP, preTurn, tPID, PID, turnPID = 0;
+// bool enable = true;
+// const double kp = 15;
+// const double kd = 10;
+// const double ki = 0;
+//
+// const double tkp = 17;
+// const double tkd = 5;
+// const double tki = 0;
+//
+// const double turnkp = 130;
+// const double turnkd = 11;
+// const double turnki = 0;
+//
+// void PIDMove(double units){
+//  enable = true;
+// 	 while(enable) {
+// 			 double *pos = position();
+// 			 P = units - (pos[0]);
+// 			 I += P;
+// 			 D = P - preP;
+//
+// 			 tP = (pos[2]*1.0);
+// 			 tI += tP;
+// 			 tD = tP - preTheta;
+//
+// 			 PID = (P * kp) + (D * kd) + (I * ki);
+// 			 tPID = (tP * tkp) + (tD * tkd) + (tI * tki);
+// 			 pros::lcd::set_text(0, std::to_string(pos[0]));
+// 			 pros::lcd::set_text(1, std::to_string(pos[2]));
+// 			 pros::lcd::set_text(3, std::to_string(PID));
+// 			 pros::lcd::set_text(4, std::to_string(tPID));
+//
+// 			 setDrive(PID + tPID, PID - tPID);
+// 			 preP = P;
+// 			 preTheta = tP;
+// 			 if ((units == pos[0]) || (((P < 0.03) && (P > -0.03)))) {
+// 					 enable = false;
+// 					 break;
+// 			 }
+// 	 }
+// }
+// void PIDTurn(double radians){
+//  enable = true;
+// 	 while(enable){
+// 			 double *pos = position();
+//
+// 			 turnP = radians - pos[2];
+// 			 turnI += turnP;
+// 			 turnD = turnP - preTurn;
+// 			 turnPID = (turnP * turnkp) + (turnD * turnkd) + (turnI * turnki);
+// 			 setDrive(1*turnPID, -1*turnPID);
+// 			 pros::lcd::set_text(2, std::to_string(turnPID));
+// 			 pros::lcd::set_text(3, std::to_string(pos[2]));
+// 			 if (radians == pos[2] || (abs(radians-pos[2]) <= 0.01)) {
+// 					 enable = false;
+// 					 break;
+// 			 }
+// 			 preTurn = turnP;
+// 			 pros::delay(20);
+// 	 }
+// }
 
 
 
@@ -179,8 +294,8 @@ void initialize() {
 	pros::lcd::set_text(1, "I'm hungry!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
-	pros::delay(5000);
-	//autonomous();
+
+	autonomous();
 
 	// pros::Motor FLeft(20, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 	// pros::Motor FRight(10, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
@@ -216,9 +331,7 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {
-	//pros::delay(5000);
-}
+void competition_initialize() {}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -232,144 +345,27 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {35_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A");
-	// profileController->waitUntilSettled();
 
-//allaince goal, shove rings in
-	// forkcontroller->setTarget(1900);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {18_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A", "true");
-	// profileController->waitUntilSettled();
-	// forkcontroller->setTarget(1400);
-	// liftcontroller->setTarget(500);
-	// pros::delay(500);
-	// intakecontroller->setTarget(-1000001);
-	// drive(40, 40);
-	// pros::delay(5000);
+DriveStraight(1080);
+
+//inertial_turn(90);
+// set the state to zero
+// chassis->setState({0_in, 0_in, 0_deg});
+// // // turn 45 degrees and drive approximately 1.4 ft
+// chassis->driveToPoint({4_ft, 0_ft});
+// while (true) {
+// 		pros::lcd::set_text(0, std::to_string(encoder_right.get_value()));
+// }
+// turn approximately 45 degrees to end up at 90 degrees
 
 
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A");
-	// profileController->waitUntilSettled();
-
-	//right side
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {39_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A");
-	// profileController->waitUntilSettled();
-
-	//important 1111111!!!
-	drive(1000, 1000);
-	pros::delay(1100);
-	jawcontroller->setTarget(-400);
-	profileController->generatePath({{0_in, 0_in, 0_deg},{-25_in, 0_in, 0_deg}}, "B");
-	profileController->setTarget("B", true);
-	profileController->waitUntilSettled();
-	forkcontroller->setTarget(1900);
-	liftcontroller->setTarget(400);
-	inertial_turn(-95);
-	profileController->generatePath({{0_in, 0_in, 0_deg},{-20_in, 0_in, 0_deg}}, "C");
-	profileController->setTarget("C", true);
-	profileController->waitUntilSettled();
-	liftcontroller->setTarget(-300);
-	forkcontroller->setTarget(1425);
-	intakecontroller->setTarget(-100000);
-	profileController->generatePath({{0_in, 0_in, 0_deg},{10_in, 0_in, 0_deg}}, "D");
-	profileController->setTarget("D");
-	profileController->waitUntilSettled();
-	pros::delay(500);
-	forkcontroller->setTarget(1900);
-	pros::delay(4000);
-
-
-
-
-
-//grab 2 neutrals from left side with claw
-	// drive(1000, 1000);
-	// pros::delay(1100);
-	// jawcontroller->setTarget(-400);
-	// pros::delay(150);
-	// liftcontroller->setTarget(500);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {22_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A", "true");
-	// profileController->waitUntilSettled();
-	// inertial_turn(-180);
-	// jawcontroller->setTarget(300);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {4_in, 0_in, 0_deg}}, "B");
-	// profileController->setTarget("B", "true");
-	// profileController->waitUntilSettled();
-	// inertial_turn(-168);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {30_in, 0_in, 0_deg}}, "C");
-	// profileController->setTarget("C");
-	// liftcontroller->setTarget(5);
-	// profileController->waitUntilSettled();
-	// jawcontroller->setTarget(-400);
-	// pros::delay(200);
-	// inertial_turn(-30);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {40_in, 0_in, 0_deg}}, "D");
-	// profileController->setTarget("D", "true");
-	// forkcontroller->setTarget(0);
-	// profileController->waitUntilSettled();
-
-
-
-
-//2 neutral goal from left side (fork large one)
-	// drive(1000, 1000);
-	// pros::delay(1100);
-	// jawcontroller->setTarget(-400);
-	// pros::delay(300);
-	// liftcontroller->setTarget(150);
-	// forkcontroller->setTarget(1900);
-	// pros::delay(50);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {8_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A", "true");
-	// profileController->waitUntilSettled();
-	// inertial_turn(-135);
-	// forkcontroller->waitUntilSettled();
-	// liftcontroller->setTarget(150);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {22_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A", "true");
-	// profileController->waitUntilSettled();
-	// forkcontroller->setTarget(1450);
-	// pros::delay(150);
-	// inertial_turn(-60);
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {46_in, 0_in, 0_deg}}, "B");
-	// profileController->setTarget("B");
-	// profileController->waitUntilSettled();
-
-
-	// double degrees = 90;
-	// if (degrees > 0) {
-	// 	while (abs(inertial_sensor.get_heading()) < abs(degrees*0.98)) {
-	// 		FLeft.move_voltage(-80);
-	// 		BLeft.move_voltage(-80);
-	// 		FRight.move_voltage(80);
-	// 		BRight.move_voltage(80);
-	// 	}
-	// }
-	// else {
-	// while (abs(inertial_sensor.get_heading()) < abs(degrees*0.98)) {
-	// 	FLeft.move_voltage(80);
-	// 	BLeft.move_voltage(80);
-	// 	FRight.move_voltage(-80);
-	// 	BRight.move_voltage(-80);
-	// }
-	// }
-	// 	FLeft.move_voltage(0);
-	// 	BLeft.move_voltage(0);
-	// 	FRight.move_voltage(0);
-	// 	BRight.move_voltage(0);
-	//
-	//
 
 
 //autos start
 	//drive backwards and drop 3 rings and then pick up goal
-	// profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
-	// profileController->setTarget("A", "true");
-	// profileController->waitUntilSettled();
+// 	profileController->generatePath({{0_in, 0_in, 0_deg}, {12_in, 0_in, 0_deg}}, "A");
+// 	profileController->setTarget("A", "true");
+// 	profileController->waitUntilSettled();
 // 	forkcontroller->setTarget(500);
 // 	forkcontroller->waitUntilSettled();
 // 	profileController->generatePath({{0_in, 0_in, 0_deg}, {5_in, 0_in, 0_deg}}, "A");
@@ -512,7 +508,6 @@ void autonomous() {
 // profileController->waitUntilSettled();
 
 //autos end
-
 
 	// profileController->generatePath({{0_in, 0_in, 0_deg}, {34_in, 0_in, 0_deg}}, "A");
 	// profileController->setTarget("A");
@@ -657,10 +652,9 @@ void opcontrol() {
 	int deadband = 5;
 
 	Fork.set_zero_position(0);
-
 	while (true) {
-		double abc = inertial_sensor.get_heading();
-		pros::lcd::set_text(3, std::to_string(abc));
+		pros::lcd::set_text(0, std::to_string(encoder_right.get_value()));
+		pros::lcd::set_text(6, std::to_string(encoder_left.get_value()));
 		int x = abs(Master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
 		int y = abs(Master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
 		double armPos = abs(Master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
@@ -746,32 +740,31 @@ void opcontrol() {
 
 
 			if (Master.get_digital(DIGITAL_R1)) {
-				Claw.move_velocity(90);
+				Claw.move_velocity(75);
 				}
 			else if (Master.get_digital(DIGITAL_R2)) {
-				Claw.move_velocity(-90);
+				Claw.move_velocity(-75);
 			}
 			else {
 			Claw.move_velocity(0);
 		}
 
-		if (Master.get_digital(DIGITAL_L1)){
+		if (Master.get_digital(DIGITAL_L2)){
 			//Fork.move_absolute(double (1850), 127);
-			Fork.move_velocity(-1000);
-			//forkcontroller->setTarget(-450);
+			forkcontroller->setTarget(0);
 
-		} else if (Master.get_digital(DIGITAL_L2)){
+
+		} else if (Master.get_digital(DIGITAL_L1)){
 			//Fork.move_absolute(double (1000), 127);
-			Fork.move_velocity(1000);
-			//forkcontroller->setTarget(0);
-		}
-		else {
-			Fork.move_velocity(0);
-		}
-		// else if (Master.get_digital(DIGITAL_UP)){
-		// 	//Fork.move_absolute(double (10), 127);
-		// 	forkcontroller->setTarget(-1895);
+			forkcontroller->setTarget(-1900);
 
+
+		}
+		else if (Master.get_digital(DIGITAL_UP)){
+			//Fork.move_absolute(double (10), 127);
+			forkcontroller->setTarget(15);
+
+		}
 
 		if (Master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) < 0){
 			armPwr = -armPwr;
@@ -786,8 +779,8 @@ void opcontrol() {
 			}
 }
 
-	if (Lift.get_position() >= 350 && Intake01) {
-			Intake.move_velocity(-1000);
+	if (Lift.get_position() >= 500 && Intake01) {
+			Intake.move_velocity(125);
 		}
 	else {
 		Intake.move_velocity(0);
@@ -802,6 +795,4 @@ void opcontrol() {
 		BRight.move(leftPower);
 		Lift.move(armPwr);
 		pros::delay(20);
-
-	}
-}
+	}}
