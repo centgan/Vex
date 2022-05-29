@@ -8,6 +8,8 @@ void position(void *param);
 
 double * straight();
 
+void newPosition(void *param);
+
 extern double globalPos[3];
 
-void guard(void *param);
+//void guard(void *param);

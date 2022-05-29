@@ -1,14 +1,13 @@
 #include "main.h"
-
-pros::Motor DLF(19, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor DRF(9, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor DLF(14, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor DRF(15, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 pros::Motor DLB(13, pros::E_MOTOR_GEARSET_18, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor DRB(14, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor DRB(18, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 
 pros::Motor lift(11, pros::E_MOTOR_GEARSET_36, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor claw(18, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor Fork(15, pros::E_MOTOR_GEARSET_36, true, pros::E_MOTOR_ENCODER_COUNTS);
-pros::Motor intake(17, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor claw(6, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor Fork(17, pros::E_MOTOR_GEARSET_36, true, pros::E_MOTOR_ENCODER_COUNTS);
+pros::Motor intake(9, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_COUNTS);
 
 //Initializing okapi Motors
 //okapi::MotorGroup left({13, 11});
@@ -23,12 +22,9 @@ pros::Motor intake(17, pros::E_MOTOR_GEARSET_18, false, pros::E_MOTOR_ENCODER_CO
 //pros::ADIEncoder encoder_left(5, 6, false);
 //pros::ADIEncoder encoder_rear(3, 4, false);
 
-pros::ADIEncoder encoder_right(3, 4, false);
-pros::ADIEncoder encoder_left(5, 6, true);
-pros::ADIEncoder encoder_rear(7, 8, false);
-
-//Initializing Sensors
-pros::Imu imu_sensor(18);
+pros::ADIEncoder encoder_right(7, 8, false);
+pros::ADIEncoder encoder_left(1, 2, false);
+pros::ADIEncoder encoder_rear(3, 4, true);
 
 //Initializing Controller
 pros::Controller con(pros::E_CONTROLLER_MASTER);

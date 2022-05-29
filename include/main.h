@@ -76,10 +76,11 @@ void opcontrol(void);
 #include "sub/Global.hpp"
 #include "sub/Sensor.hpp"
 #include "sub/Auto.hpp"
+#include "sub/Path.hpp"
+
 /**
  * You can add C++-only headers here
  */
-//#include <iostream>
 #endif
 
 #endif  // _PROS_MAIN_H_

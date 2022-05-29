@@ -1,4 +1,7 @@
 #include "main.h"
+#include <fstream>
+#include <iostream>
+using namespace std;
 
 double P, tP, turnP;
 double tD, tI, D, I, turnD, turnI, preTheta, preP, preTurn, tPID, PID, turnPID = 0;
@@ -23,11 +26,6 @@ const double tki = 0.04;
 //const double turnkd = 7;
 //const double turnki = 0.7;
 //
-double turnkp = 220;  //185 220
-const double turnkd = 12.95;  //25  15
-const double turnkin = 0.0; //0.6    0.3  1.567
-const double turnkif = 0.0; //0.57
-const double turnkib = 0.0; //0.49
 
 
 
@@ -47,10 +45,6 @@ void setDrive(int left, int right){
     DRF.move(right);
     DLB.move(left);
     DRB.move(right);
-//    DLF = left;
-//    DRF = right;
-//    DLB = left;
-//    DRB = right;
 }
 
 bool moveHoldFork;
@@ -63,8 +57,9 @@ void holdFork(void*param){
             forkPos = Fork.get_position();
         }
         while(moveHoldFork){
-            Fork.move((forkPos - Fork.get_position())*2.5);
+            Fork.move((forkPos - Fork.get_position())*1.75);
 //            pros::lcd::set_text(5, std::to_string((forkPos - Fork.get_position()) * 2.5));
+            pros::delay(10);
         }
         pros::delay(10);
     }
@@ -77,7 +72,7 @@ void holdClaw(void*param){
             clawPos = claw.get_position();
         }
         while(moveHoldClaw){
-            claw.move(clawPos - claw.get_position());
+            claw.move(clawPos - claw.get_position()*5);
             pros::delay(10);
         }
         pros::delay(10);
@@ -96,7 +91,17 @@ void hold(void*param){
             Fork.move(forkPos - Fork.get_position());
             pros::delay(10);
         }
-        pros::delay(10);
+        pros::delay(15);
+    }
+}
+
+void data(void*param){
+    while(true){
+        fstream hello;
+        hello.open("/usd/data.txt", ios::app);
+        hello << globalPos[0] << " " << globalPos[1] << " " << globalPos[2] << endl;
+        hello.close();
+        pros::delay(15);
     }
 }
 
@@ -137,8 +142,8 @@ void drivemotors(){
     if (con.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X) < 0){
         Trn = -Trn;
     }
-    leftPower = Pwr + Trn;
-    rightPower = Pwr - Trn;
+    leftPower = Pwr + Trn * 0.8;
+    rightPower = Pwr - Trn * 0.8;
     setDrive(leftPower, rightPower);
 }
 
@@ -155,11 +160,6 @@ void liftArm(){
         else {
             armPwr = (5*pow((1.0/5.5)*(armPos/10.0), 3.0) * 12.7) * 1;
         }
-        if (lift.get_position() > 400){
-            intake.move_voltage(-12000);
-        } else{
-            intake.move_voltage(0);
-        }
     }else {
         armPwr = 0;
     }
@@ -169,27 +169,42 @@ void liftArm(){
     lift.move(armPwr);
 }
 
+bool in = true;
 void moveSub(){
-    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && claw.get_position() < -50){
-        claw.move_voltage(4500);
-    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && claw.get_position() > -300){
-        claw.move_voltage(-4500);
+    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+        claw.move_voltage(-12000);
+        moveHoldClaw = false;
+    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+        claw.move_voltage(7000);
+        moveHoldClaw = false;
     } else {
         claw.move_voltage(0);
+        moveHoldClaw = true;
     }
-    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && Fork.get_position() < 3000){
+    if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
 //        Fork.move_absolute(3000, 100);
 //        tipcontroller->setTarget(3100);
         Fork.move_voltage(11000);
         moveHoldFork = false;
-    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && Fork.get_position() > 2000){
+    } else if (con.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
 //        Fork.move_absolute(1000, 100);
 //        tipcontroller->setTarget(2000);
         Fork.move_voltage(-11000);
         moveHoldFork = false;
+    } else if(con.get_digital(pros::E_CONTROLLER_DIGITAL_UP) && Fork.get_position() > 10){
+        Fork.move_voltage(-12000);
+        moveHoldFork = false;
     } else{
         Fork.move_voltage(0);
         moveHoldFork = true;
+    }
+    if(con.get_digital(pros::E_CONTROLLER_DIGITAL_X)){
+        in = !in;
+    }
+    if (lift.get_position() > 400 && in){
+        intake.move_voltage(-9600);
+    } else{
+        intake.move_voltage(0);
     }
 }
 
@@ -393,144 +408,364 @@ void moveArc(double radians, float length, float height, bool dir, bool reverse,
             }
 
         }
-        pros::delay(1);
+        pros::delay(15);
     }
 }
 
-double turnki;
-bool correct;
+double turnki = 0.4;
 double preAngle;
-double preVolt = 0;
-double voltSum;
 int preVal;
-int counter = 0;
+double turnkp = 146;  //185 220
+const double turnkd = 0;  //25  15 12.95
+const double turnkin = 0.0; //0.6    0.3  1.567
+const double turnkif = 0.0; //0.57
+const double turnkib = 0.0; //0.49
+
 //neg radians turns right
-void PIDTurnAbs(double radians, int weight){
+void PIDTurnAbs(double radians, bool multi, int port, int pos, bool great, int volt){
     enable = true;
-    correct = false;
-    counter = 0;
+    turnI, turnP, turnD = 0;
     while(enable){
+
+        if (multi){
+            if(great){
+                switch (port) {
+                    case 0:
+                        if(claw.get_position() > pos){
+                            claw.move_voltage(volt);
+                        }else{
+                            claw.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 1:
+                        if(Fork.get_position() > pos){
+                            Fork.move_voltage(volt);
+                        }else{
+                            Fork.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 2:
+                        if(lift.get_position() > pos){
+                            lift.move_voltage(volt);
+                        }else{
+                            lift.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    default:
+                        claw.move_voltage(0);
+                        Fork.move_voltage(0);
+                        lift.move_voltage(0);
+                }
+            }else{
+                switch (port) {
+                    case 0:
+                        if(claw.get_position() < pos){
+                            claw.move_voltage(volt);
+                        }else{
+                            claw.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 1:
+                        if(Fork.get_position() < pos){
+                            Fork.move_voltage(volt);
+                        }else{
+                            Fork.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 2:
+                        if(lift.get_position() < pos){
+                            lift.move_voltage(volt);
+                        }else{
+                            lift.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    default:
+                        claw.move_voltage(0);
+                        Fork.move_voltage(0);
+                        lift.move_voltage(0);
+                }
+            }
+        }
+
         turnP = radians - globalPos[2];
         turnI += turnP;
         turnD = turnP - preTurn;
+//
+//        ofstream pos;
+//        pos.open("/usd/Position.txt", std::ios_base::app);
+//        pos << globalPos[2] << " " << DLF.get_voltage() << " " << turnP << " " << preAngle-globalPos[2] << " " << std::endl;
+//        pos.close();
 
-        if (weight == 0){
-            turnki = turnkin;
-        } else if(weight == 1){
-            turnki = turnkif;
-        } else if(weight == 2){
-            turnki = turnkib;
+
+        if (abs(globalPos[2]) > abs(radians)){
+            turnI = 0;
         }
-        turnPID = (turnP * turnkp) + (turnD * turnkd) + (turnI * turnki);
+        if (0.1 < abs(turnP) && abs(turnP) < 0.1){
+            turnki = 12;
+        }else if(abs(turnP) < 0.15){
+            turnkp = 157;
+            turnki = 110;
+        }
+
+        turnPID = (turnP*turnkp) + (turnD*turnkd) + (turnI*turnki);
+
+//        if(abs(turnP) < 0.05 && abs(turnPID) < 15){
+//            turnPID= 15;
+//        }
         pros::lcd::set_text(0, std::to_string(DLF.get_voltage()));
-        pros::lcd::set_text(1, std::to_string(radians - globalPos[2]));
-        pros::lcd::set_text(2, std::to_string(preAngle-globalPos[2]));
-        pros::lcd::set_text(3, std::to_string(globalPos[2]));
+        pros::lcd::set_text(1, std::to_string(turnPID));
+        pros::lcd::set_text(2, std::to_string(radians - globalPos[2]));
+//        pros::lcd::set_text(2, std::to_string(globalPos[0]));
+//        pros::lcd::set_text(3, std::to_string(globalPos[1]));
+        pros::lcd::set_text(4, std::to_string(globalPos[2]));
 
-        if (abs(DLF.get_voltage()) < 500 && abs(radians-globalPos[2]) < 0.004){
+//        pros::lcd::set_text(2, std::to_string(preAngle-globalPos[2]));
+//        pros::lcd::set_text(3, std::to_string(globalPos[2]));
+
+        if (DLF.get_voltage() < 600 && abs(radians-globalPos[2]) < 0.004){
             enable = false;
             setDrive(0, 0);
+            claw.move_voltage(0);
+            Fork.move_voltage(0);
+            lift.move_voltage(0);
             break;
         }
-        if (abs(DLF.get_voltage()) <= 80 && ((preAngle-globalPos[2]) == 0) && abs(radians-globalPos[2]) < 0.3 && preVal == encoder_left.get_value()){
+        if (DLF.get_voltage() < 200 && ((preAngle-globalPos[2]) == 0) && abs(radians-globalPos[2]) < 0.05 && preVal == encoder_left.get_value()){
             enable = false;
             setDrive(0, 0);
+            claw.move_voltage(0);
+            Fork.move_voltage(0);
+            lift.move_voltage(0);
             break;
         }
+
+//        if (abs(turnPID) < 10 && abs(radians-globalPos[2]) < 0.3){
+//            if(turnPID > 0){
+//                turnPID = 10;
+//            } else{
+//                turnPID = -10;
+//            }
+//        }
 
         setDrive(-turnPID, turnPID);
-//        pros::lcd::set_text(0, std::to_string(turnPID));
-//        pros::lcd::set_text(1, std::to_string(turnP));
-//        if (turnPID >=  10){
-//            turnPID = turnPID * 10;
-//        }else {
-//            turnPID = turnPID * 1.25;
-//        }
 
 //        if ((abs(radians - globalPos[2]) > 0.004) &&(abs(DLF.get_voltage()) <= 500)){
 //            turnPID = turnPID * 4.75;
 //        }
 
-
-//        pros::lcd::set_text(0, std::to_string(P));
-//        pros::lcd::set_text(1, std::to_string(I));
-//        pros::lcd::set_text(2, std::to_string(D));
-//        pros::lcd::set_text(3, std::to_string(globalPos[2]));
-//        pros::lcd::set_text(4, std::to_string(radians - globalPos[2]));
-
-
         preTurn = turnP;
         preVal = encoder_left.get_value();
         preAngle = globalPos[2];
-        preVolt = abs(DLF.get_voltage());
-        pros::delay(1);
+        pros::delay(15);
     }
 }
-double *prePosTurn;
 
-//void PIDTurnRel(double radians){
-//    enable = true;
-//    bool first = true;
-//    while(enable){
-//        if (first){
-//            prePosTurn = position();
-//            first = false;
+double angleE, angleI, angleD, driveE, driveI, driveD, preAE, preDE, anglePID, drivePID = 0;
+double angleKp = 198;
+double angleKi = 0.24;
+//double angleKp = 0;
+//double angleKi = 0;
+double angleKd = 0;
+double driveKp = 4.6;
+double driveKi = 0.008;
+double driveKd = 0;
+double scalar;
+double Min = 30;
+double leftMove, rightMove = 0;
+//for port 0 is claw, 1 is fork, 2 is lift
+//great means if current position is greater than position provided
+void MoveToPoint(double x, double y, double heading, double Max, bool dir, bool ring, bool multi, int port, int pos, bool great, int volt){
+    enable = true;
+    while(enable){
+        double tM = atan2(x-globalPos[0], y-globalPos[1]);
+        double startX = globalPos[0];
+        double startY = globalPos[1];
+        double startH = globalPos[2];
+
+        ofstream position;
+        position.open("/usd/Position.txt", std::ios_base::app);
+        position << globalPos[0] << " " << globalPos[1] << " " << globalPos[2] << " " << drivePID << " " << anglePID << " " << driveE << " " << angleE << " " << leftMove << " " << rightMove << " " << tM << std::endl;
+        position.close();
+
+        driveE = sqrt(std::pow((y-startY), 2)+std::pow(x-startX, 2));
+        driveI += driveE;
+        driveD = driveE - preDE;
+        drivePID = (driveE * driveKp) + (driveI * driveKi) + (driveD * driveKd);
+
+        angleE = tM - startH;
+        angleI += angleE;
+        angleD = angleE - preAE;
+        anglePID = (angleE * angleKp) + (angleI * angleKi) + (angleD * angleKd);
+
+        if (multi){
+            if(great){
+                switch (port) {
+                    case 0:
+                        if(claw.get_position() > pos){
+                            claw.move_voltage(volt);
+                        }else{
+                            claw.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 1:
+                        if(Fork.get_position() > pos){
+                            Fork.move_voltage(volt);
+                        }else{
+                            Fork.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 2:
+                        if(lift.get_position() > pos){
+                            lift.move_voltage(volt);
+                        }else{
+                            lift.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    default:
+                        claw.move_voltage(0);
+                        Fork.move_voltage(0);
+                        lift.move_voltage(0);
+                }
+            }else{
+                switch (port) {
+                    case 0:
+                        if(claw.get_position() < pos){
+                            claw.move_voltage(volt);
+                        }else{
+                            claw.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 1:
+                        if(Fork.get_position() < pos){
+                            Fork.move_voltage(volt);
+                        }else{
+                            Fork.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    case 2:
+                        if(lift.get_position() < pos){
+                            lift.move_voltage(volt);
+                        }else{
+                            lift.move_voltage(0);
+                            multi = false;
+                        }
+                        break;
+                    default:
+                        claw.move_voltage(0);
+                        Fork.move_voltage(0);
+                        lift.move_voltage(0);
+                }
+            }
+        }
+        if(lift.get_position() > 400 && ring){
+            intake.move_voltage(-12000);
+        }
+
+//        pros::lcd::set_text(0, std::to_string(anglePID));
+//        pros::lcd::set_text(1, std::to_string(drivePID));
+//        pros::lcd::set_text(2, std::to_string(angleE));
+//        pros::lcd::set_text(3, std::to_string(driveE));
+
+//        if(abs(angleE) < 0.15){
+//            anglePID = 0;
 //        }
-//
-//        turnP = (radians + prePosTurn[2]) - pos[2];
-//        turnI += turnP;
-//        turnD = turnP - preTurn;
-//        turnPID = (turnP * turnkp) + (turnD * turnkd) + (turnI * turnki);
-//
-////        if (turnPID >=  10){
-////            turnPID = turnPID * 2;
-////        }
-//        setDrive(-turnPID, turnPID);
-//        pros::lcd::set_text(0, std::to_string(pos[2]));
-//        pros::lcd::set_text(1, std::to_string(turnPID));
-//        pros::lcd::set_text(2, std::to_string(prePosTurn[2]+radians));
-//        pros::lcd::set_text(3, std::to_string(turnP));
-//        pros::lcd::set_text(4, std::to_string(prePosTurn[2]));
-//        pros::lcd::set_text(5, std::to_string(pos[2]));
-//
-//
-//        if ((prePosTurn[2]+radians) == pos[2] || (abs((prePosTurn[2]+radians) - pos[2]) < 0.01)){
-//            enable = false;
-//            break;
+        leftMove = drivePID - anglePID;
+        rightMove = drivePID + anglePID;
+
+        if (abs(leftMove) > Max || abs(rightMove) > Max){
+            if (abs(leftMove) > abs(rightMove)){
+                scalar = Max/leftMove;
+            }else{
+                scalar = Max/rightMove;
+            }
+            leftMove *= scalar;
+            rightMove *= scalar;
+        }
+//        else if (abs(leftMove) < Min && abs(rightMove) < Min){
+//            leftMove = 30;
+//            rightMove = 30;
 //        }
-//        preTurn = turnP;
-//        pros::delay(5);
-//    }
-//}
+//        pros::lcd::set_text(4, std::to_string(leftMove));
+//        pros::lcd::set_text(5, std::to_string(rightMove));
 
+        if (dir){
+            if (((abs(x-globalPos[0])) < 0.3) && ((abs(y-globalPos[1])) < 0.3)){
+                PIDTurnAbs(heading);
+                dir = false;
+                claw.move_voltage(0);
+                Fork.move_voltage(0);
+                lift.move_voltage(0);
+                break;
+            }
+        }else{
+            if (((abs(x-globalPos[0])) < 3) && ((abs(y-globalPos[1])) < 3)){
+                setDrive(0, 0);
+                enable = false;
+                claw.move_voltage(0);
+                Fork.move_voltage(0);
+                lift.move_voltage(0);
+                break;
+            }
+        }
+        setDrive(leftMove, rightMove);
 
-// working only with global positions
-// 2d array of row 1 being starting coords
-// row 2 being ending coords
-// col 1 x, col 2 y, col 3 angle
-// Theta = tan inverse ((m1 - m2)/(1 + m1m2))
-// setDrive(127, 2.15); drive in a circle 15 inches in diameter or 7.5 inches in radius
-// startingL[2] = x, y
+        preAE = angleE;
+        preDE = driveE;
+        pros::delay(20);
+    }
+}
 
-//float startingL[2], startingR[2], finishL, finishR;
-//void dubinsCurve(float coords[][3], bool reverse){
-//    //calculate the 4 circles
-//    if ((coords[0][2] >= 0) && (coords[0][2] <= 90)){
-//        if (coords[0][2] == 90){
-//            startingL[0] = coords[0][0];
+float leftPow, rightPow = 0;
+void arcFollow(std::vector<double>& x, std::vector<double>& y, double heading, int max, bool dir){
+//    double startX = globalPos[0];
+//    double startY = globalPos[1];
+//    double startH = globalPos[2];
 //
-//        }
-//    }
-//    if ((coords[0][2] == 0) || (coords[0][2] == 180)){
-//        startingL[0] = coords[0][0] + 7.5;
-//        startingL[1] = coords[0][1], startingR[1] = coords[0][1];
-//        startingR[0] = coords[0][0] - 7.5;
-//    } else if ((coords[0][2] == 90) || (coords[0][2] == 270)){
-//        startingL[0] = coords[0][0], startingR[0] = coords[0][0];
-//        startingL[1] = coords[0][1] - 7.5;
-//        startingR[1] = coords[0][1] + 7.5;
-//    } else if (()){
-//        float m2 = tan()
-//    }
-////    float startingL =
-//}
+//    double
+    for (int j=0; j<=x.size()-1; j++){
+        double one_two = sqrt(std::pow((x[j+1]-x[j]), 2)+std::pow((y[j+1]-y[j]), 2));
+        double bottom = x[j+1]-x[j];
+        double angle = 2*acos(bottom/one_two);
+        double radius = bottom/sin(angle);
+        double ratio = ((radius*2)+7.25)/((radius*2)-7.25);
+//        pros::lcd::set_text(0, std::to_string(one_two));
+//        pros::lcd::set_text(1, std::to_string(bottom));
+//        pros::lcd::set_text(2, std::to_string(angle));
+//        pros::lcd::set_text(3, std::to_string(radius));
+        pros::lcd::set_text(2, std::to_string(ratio));
+
+        if(x[j+1]>x[j]){
+            rightPow = max;
+            leftPow = max/ratio;
+        } else{
+            rightPow = max/ratio;
+            leftPow = max;
+        }
+        while(true){
+            pros::lcd::set_text(0, std::to_string(leftPow));
+            pros::lcd::set_text(1, std::to_string(rightPow));
+            setDrive(leftPow, rightPow);
+            if (((abs(x[j+1]-globalPos[0])) < 1) && ((abs(y[j+1]-globalPos[1])) < 1)){
+                setDrive(0, 0);
+                break;
+            }
+            pros::delay(20);
+        }
+    }
+}
+
+void arcFind(std::vector<double> &x, std::vector<double> &y){
+
+}
+

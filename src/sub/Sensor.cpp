@@ -2,8 +2,8 @@
 
 //constants
 const double circ = (p * 2.75)/360;
-const double L = 9.25;
-const double B = 4;
+const double L = 9.35;
+const double B = 5;
 
 //left, right, back, heading encoder values
 double prePos[3] = {0, 0, 0};
@@ -55,6 +55,7 @@ double * straight(){
     return curPos;
 }
 
+static bool init;
 void position(void*param){
     while(true){
         static bool once = [](){
@@ -76,18 +77,25 @@ void position(void*param){
 //        pros::lcd::set_text(2, std::to_string(curPos[2]));
 
         double x = circ * ((n1 + n2)/2);
-        double y = circ * (n3 - (B * (n2 - n1)/L));
         double theta = circ * (n2 - n1)/L;
+        double y = circ * (n3-(B * theta));
 //    double degree = (theta * 180)/pi;
 //        pros::lcd::set_text(3, std::to_string(x));
 //        pros::lcd::set_text(4, std::to_string(y));
 //        pros::lcd::set_text(5, std::to_string(theta));
 //        pros::lcd::set_text(6, std::to_string(degree));
 
-
-        globalPos[0] += x * cos(globalPos[2] + theta/2) - y * sin(globalPos[2] + theta/2);
-        globalPos[1] += x * sin(globalPos[2] + theta/2) + y * cos(globalPos[2] + theta/2);
         globalPos[2] += theta;
+//        pros::lcd::set_text(1, std::to_string(2*p));
+//        if(abs(globalPos[2]) > 2*p){
+//            if (globalPos[2] > 0){
+//                globalPos[2] = globalPos[2] - 2*p;
+//            }else{
+//                globalPos[2] = globalPos[2] + 2*p;
+//            }
+//        }
+        globalPos[1] += x * cos(globalPos[2] + theta/2) + y * sin(globalPos[2] + theta/2);
+        globalPos[0] += x * sin(globalPos[2] + theta/2) - y * cos(globalPos[2] + theta/2);
 
 
         pros::lcd::set_text(3, std::to_string(globalPos[0]));
@@ -97,15 +105,15 @@ void position(void*param){
         prePos[0] = curPos[0];
         prePos[1] = curPos[1];
         prePos[2] = curPos[2];
-        pros::delay(1);
+        pros::delay(20);
     }
 }
 
-void guard(void*param) {
-    while (true) {
-        if (globalPos[0] >= 83){
-            setDrive(0, 0);
-        }
-        pros::delay(1);
-    }
-}
+//void guard(void*param) {
+//    while (true) {
+//        if (*globalPos[0] >= 83){
+//            setDrive(0, 0);
+//        }
+//        pros::delay(1);
+//    }
+//}
